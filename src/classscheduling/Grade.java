@@ -10,6 +10,7 @@ package classscheduling;
  * @author krzys
  */
 public enum Grade {
+    
     SEVEN("Grade 7"),
     EIGHT("Grade 8"),
     NINE("Grade 9");

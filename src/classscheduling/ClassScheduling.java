@@ -5,11 +5,18 @@
  */
 package classscheduling;
 
+import static classscheduling.Period.FIRST;
+import static classscheduling.Period.SECOND;
+import static classscheduling.Period.THIRD;
+import static classscheduling.Period.FOURTH;
+
 /**
  *
  * @author krzys
  */
 public class ClassScheduling {
+    
+    static int movesTried;
 
     /**
      * @param args the command line arguments
@@ -17,91 +24,116 @@ public class ClassScheduling {
      */
     public static void main(String[] args) throws Exception {
         Schedule example = exampleSchedule();
-        Course c = example.todo();
-        while (c != null) {
-            if (!example.scheduleOneSlot(c)) {
-                example.backTrack();
-                System.out.println("pop");
-            } else {
-                Slot top = example.peek();
-                System.out.println(top);
-            }
-            c = example.todo();
+        
+        if (fillSchedule(example)) {
+            System.out.println("success!");
+            example.print();
+        } else {
+            System.out.println("failed.");
         }
-//        ValidationErrors errors = example.validate();
-//        errors.print();
+        example.validate().print();
+    }
+    
+    // TODO tail recursion to while loop?
+    // TODO make smart decisions based on which constraint failed
+    private static boolean fillSchedule(Schedule s) throws Exception {
+        if (s.validateConstraints().hasErrors()) {
+            return false;
+        }
+        if (null == s.todo()) {
+            return true;
+        }
+        for (Slot slot : s.getEmptySlots()) {
+            for (Course c : s.courses) {
+                s.fillSlot(slot, c);
+                movesTried++;
+//                System.out.println(slot);
+                boolean success = fillSchedule(s);
+                if (success) {
+                    return true;
+                }   
+//                System.out.println("POP " + slot);
+                s.undo(slot);
+                if ((movesTried % 100000) == 1) {
+                    System.out.println(s.freeSlots() + " free slots left after " 
+                    + movesTried + " moves");
+                }                
+            }
+        }
+        // no empty slot yields a winner
+        return false;
     }
 
     private static Schedule exampleSchedule() throws Exception {
         Schedule schedule = new Schedule();
 
         // Monday
-        schedule.monday.grade7.set(1, 'M');
-        schedule.monday.grade7.set(2, 'E');
-        schedule.monday.grade7.set(3, 'F');
+        schedule.monday.grade7.set(FIRST, 'M');
+        schedule.monday.grade7.set(SECOND, 'E');
+        schedule.monday.grade7.set(THIRD, 'F');
 
-        schedule.monday.grade8.set(1, 'E');
-        schedule.monday.grade8.set(3, 'F');
-        schedule.monday.grade8.set(4, 'M');
+        schedule.monday.grade8.set(FIRST, 'E');
+        schedule.monday.grade8.set(THIRD, 'F');
+        schedule.monday.grade8.set(FOURTH, 'M');
 
-        schedule.monday.grade9.set(2, 'M');
-        schedule.monday.grade9.set(3, 'F');
-        schedule.monday.grade9.set(4, 'E');
+        schedule.monday.grade9.set(SECOND, 'M');
+        schedule.monday.grade9.set(THIRD, 'F');
+        schedule.monday.grade9.set(FOURTH, 'E');
 
         // Tuesday
-        schedule.tuesday.grade7.set(1, 'M');
-        schedule.tuesday.grade7.set(2, 'E');
-        schedule.tuesday.grade7.set(3, 'F');
+        schedule.tuesday.grade7.set(FIRST, 'M');
+        schedule.tuesday.grade7.set(SECOND, 'E');
+        schedule.tuesday.grade7.set(THIRD, 'F');
 
-        schedule.tuesday.grade8.set(1, 'E');
-        schedule.tuesday.grade8.set(3, 'F');
-        schedule.tuesday.grade8.set(4, 'M');
+        schedule.tuesday.grade8.set(FIRST, 'E');
+        schedule.tuesday.grade8.set(THIRD, 'F');
+        schedule.tuesday.grade8.set(FOURTH, 'M');
 
-        schedule.tuesday.grade9.set(2, 'M');
-        schedule.tuesday.grade9.set(3, 'F');
-        schedule.tuesday.grade9.set(4, 'E');
+        schedule.tuesday.grade9.set(SECOND, 'M');
+        schedule.tuesday.grade9.set(THIRD, 'F');
+        schedule.tuesday.grade9.set(FOURTH, 'E');
 
         // Wednesday
-        schedule.wednesday.grade7.set(1, 'M');
-        schedule.wednesday.grade7.set(2, 'E');
-        schedule.wednesday.grade7.set(3, 'F');
-        schedule.wednesday.grade7.set(4, 'U');
+        schedule.wednesday.grade7.set(FIRST, 'M');
+        schedule.wednesday.grade7.set(SECOND, 'E');
+        schedule.wednesday.grade7.set(THIRD, 'F');
+        schedule.wednesday.grade7.set(FOURTH, 'U');
 
-        schedule.wednesday.grade8.set(1, 'E');
-        schedule.wednesday.grade8.set(2, 'U');
-        schedule.wednesday.grade8.set(3, 'F');
-        schedule.wednesday.grade8.set(4, 'M');
+        schedule.wednesday.grade8.set(FIRST, 'E');
+        schedule.wednesday.grade8.set(SECOND, 'U');
+        schedule.wednesday.grade8.set(THIRD, 'F');
+        schedule.wednesday.grade8.set(FOURTH, 'M');
 
-        schedule.wednesday.grade9.set(1, 'U');
-        schedule.wednesday.grade9.set(2, 'M');
-        schedule.wednesday.grade9.set(3, 'F');
-        schedule.wednesday.grade9.set(4, 'E');
+        schedule.wednesday.grade9.set(FIRST, 'U');
+        schedule.wednesday.grade9.set(SECOND, 'M');
+        schedule.wednesday.grade9.set(THIRD, 'F');
+        schedule.wednesday.grade9.set(FOURTH, 'E');
 
         // Thursday
-        schedule.thursday.grade7.set(1, 'M');
-        schedule.thursday.grade7.set(2, 'E');
-        schedule.thursday.grade7.set(3, 'F');
-        schedule.thursday.grade7.set(4, 'U');
+        schedule.thursday.grade7.set(FIRST, 'M');
+        schedule.thursday.grade7.set(SECOND, 'E');
+        schedule.thursday.grade7.set(THIRD, 'F');
+        schedule.thursday.grade7.set(FOURTH, 'U');
 
-        schedule.thursday.grade8.set(1, 'E');
-        schedule.thursday.grade8.set(2, 'U');
-        schedule.thursday.grade8.set(3, 'F');
-        schedule.thursday.grade8.set(4, 'M');
+        schedule.thursday.grade8.set(FIRST, 'E');
+        schedule.thursday.grade8.set(SECOND, 'U');
+        schedule.thursday.grade8.set(THIRD, 'F');
+        schedule.thursday.grade8.set(FOURTH, 'M');
 
-        schedule.thursday.grade9.set(1, 'U');
-        schedule.thursday.grade9.set(2, 'M');
-        schedule.thursday.grade9.set(3, 'F');
-        schedule.thursday.grade9.set(4, 'E');
+        schedule.thursday.grade9.set(FIRST, 'U');
+        schedule.thursday.grade9.set(SECOND, 'M');
+        schedule.thursday.grade9.set(THIRD, 'F');
+        schedule.thursday.grade9.set(FOURTH, 'E');
 
         // Friday
-        schedule.friday.grade7.set(1, 'U');
-        schedule.friday.grade7.set(3, 'F');
+        schedule.friday.grade7.set(FIRST, 'U');
+        schedule.friday.grade7.set(THIRD, 'F');
 
-        schedule.friday.grade8.set(2, 'U');
-        schedule.friday.grade8.set(3, 'F');
+        schedule.friday.grade8.set(SECOND, 'U');
+        schedule.friday.grade8.set(THIRD, 'F');
 
-        schedule.friday.grade9.set(3, 'F');
-        schedule.friday.grade9.set(4, 'U');
+        schedule.friday.grade9.set(THIRD, 'F');
+        schedule.friday.grade9.set(FOURTH, 'U');
 
         return schedule;
     }

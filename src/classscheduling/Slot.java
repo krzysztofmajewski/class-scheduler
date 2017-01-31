@@ -12,12 +12,12 @@ package classscheduling;
 class Slot {
     
     Day day;
-    GradeDay grade;
-    int period;
+    GradeDay gradeDay;
+    Period period;
     
     @Override
     public String toString() {
-        return "Slot: " + day.name + ", " + grade.name + ", period " + period;
+        return "Slot: " + day.name + ", " + gradeDay.name + ", " + period + ", " + gradeDay.get(period);
     }
     
 }

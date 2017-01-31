@@ -10,7 +10,7 @@ package classscheduling;
  * @author krzys
  */
 public class GradeDay {
-    public static final int PERIODS_PER_DAY = 4;
+    public static final int PERIODS_PER_DAY = Period.values().length;
     
     final private char[] periods;
     
@@ -21,28 +21,20 @@ public class GradeDay {
         periods = new char[PERIODS_PER_DAY];
     }
     
-    public void set(int period, char course) throws Exception {
-        if ((period < 1) || (period > PERIODS_PER_DAY)) {
-            String msg = String.format("Period must be between %d and %d", 1, PERIODS_PER_DAY);
-            throw new Exception(msg);
-        }
-        periods[period - 1] = course;
+    public void set(Period period, char course) {
+        periods[period.ordinal()] = course;
     }
     
-    public char get(int period) throws Exception {
-         if ((period < 1) || (period > PERIODS_PER_DAY)) {
-            String msg = String.format("Period must be between %d and %d", 1, PERIODS_PER_DAY);
-            throw new Exception(msg);
-        }
-        return periods[period - 1];
+    public char get(Period period) {
+        return periods[period.ordinal()];
     }
 
-    public void clear(int period) throws Exception {
+    public void clear(Period period) throws Exception {
         if (get(period) == 0) {
-            String msg = String.format("Period " + period + " already cleared");
+            String msg = String.format(period + " already cleared");
             throw new Exception(msg);
         }
-        periods[period - 1] = 0;
+        periods[period.ordinal()] = 0;
     }
     
     public int count(char course) {

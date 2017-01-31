@@ -5,6 +5,8 @@
  */
 package classscheduling;
 
+import java.util.Stack;
+
 /**
  *
  * @author krzys
@@ -16,7 +18,7 @@ public class Schedule {
     Day wednesday;
     Day thursday;
     Day friday;
-    
+
     Course math;
     Course english;
     Course french;
@@ -25,10 +27,12 @@ public class Schedule {
     Course music;
 
     private final Day days[];
-    
+
     private final Course courses[];
 
     private final ValidationErrors errors;
+
+    private final Stack<Slot> history;
 
     public Schedule() {
         monday = new Day("Monday");
@@ -36,21 +40,21 @@ public class Schedule {
         wednesday = new Day("Wednesday");
         thursday = new Day("Thursday");
         friday = new Day("Friday");
-        
+
         math = Course.Math();
         english = Course.English();
         french = Course.French();
         geography = Course.Geography();
         art = Course.Art();
         music = Course.Music();
-        
+
         days = new Day[5];
         days[0] = monday;
         days[1] = tuesday;
         days[2] = wednesday;
         days[3] = thursday;
         days[4] = friday;
-        
+
         courses = new Course[6];
         courses[0] = math;
         courses[1] = english;
@@ -60,8 +64,14 @@ public class Schedule {
         courses[5] = music;
 
         errors = new ValidationErrors();
+
+        history = new Stack<>();
     }
 
+    public Slot peek() {
+        return history.peek();
+    }
+    
     ValidationErrors validate() {
         for (Course c : courses) {
             validatePeriodsPerWeek(c);
@@ -73,6 +83,15 @@ public class Schedule {
             teacherDaysOff(c);
         }
         return errors;
+    }
+
+    void validateConstraints() {
+        noCourseTwicePerDay();
+        noTeacherHasFourPeriodsPerDay();
+        frenchConferenceClass();
+        for (Course c : courses) {
+            teacherDaysOff(c);
+        }
     }
 
     private void validatePeriodsPerWeek(Course course) {
@@ -107,17 +126,17 @@ public class Schedule {
         for (Course c : courses) {
             for (Day day : days) {
                 if (day.grade7.count(c.code) > 1) {
-                    errors.add("Grade 7: too many " + c.name + " classes"
+                    errors.add(day.grade7.name + ": too many " + c.name + " classes"
                             + " on " + day.name);
                 }
 
                 if (day.grade8.count(c.code) > 1) {
-                    errors.add("Grade 8: too many " + c.name + " classes"
+                    errors.add(day.grade8.name + ": too many " + c.name + " classes"
                             + " on " + day.name);
                 }
 
                 if (day.grade9.count(c.code) > 1) {
-                    errors.add("Grade 9: too many " + c.name + " classes"
+                    errors.add(day.grade9.name + ": too many " + c.name + " classes"
                             + " on " + day.name);
                 }
             }
@@ -152,9 +171,9 @@ public class Schedule {
 
     private void frenchConferenceClass() {
         for (Day day : days) {
-            for (int period = 1; period <= Grade.PERIODS_PER_DAY; period++) {
+            for (int period = 1; period <= GradeDay.PERIODS_PER_DAY; period++) {
                 if (!allGradesHaveFrench(day, period)
-                        && !noGradesHaveFrench(day, period))  {
+                        && !noGradesHaveFrench(day, period)) {
                     errors.add("French class in period " + period
                             + " on " + day.name + " must be shared by all grades");
                 }
@@ -192,7 +211,7 @@ public class Schedule {
     Course todo() {
         Course result = null;
         errors.clear();
-        
+
         for (Course c : courses) {
             validatePeriodsPerWeek(c);
             if (!errors.isEmpty()) {
@@ -202,8 +221,62 @@ public class Schedule {
         return result;
     }
 
-    boolean scheduleCourse(Course c) {
+    // assume the current configuration has no validation errors
+    // this implies that c is not partially scheduled
+    // TODO: randomize?
+    boolean scheduleOneSlot(Course c) throws Exception {
+        errors.clear();
+
+        for (Grade g : Grade.values()) {
+            if (!gradeComplete(c, g)) {
+                return scheduleOnePeriod(c, g);
+            }
+        }
+        // TODO: is this ever reached?
         return false;
+    }
+
+    // undo the previously scheduled slot
+    void backTrack() throws Exception {
+        Slot slot = history.pop();
+        slot.grade.clear(slot.period);
+    }
+
+    // schedules one period of c, if possible
+    private boolean scheduleOnePeriod(Course c, Grade g) throws Exception {
+        for (Day day : days) {
+            for (int period = 1; period <= GradeDay.PERIODS_PER_DAY; period++) {
+                GradeDay gd = day.getGradeDay(g);
+                if (gd.get(period) == 0) {
+                    gd.set(period, c.code);
+                    errors.clear();
+                    validateConstraints();
+                    if (errors.isEmpty()) {
+                        Slot slot = new Slot();
+                        slot.day = day;
+                        slot.grade = gd;
+                        slot.period = period;
+                        history.push(slot);
+                        return true;
+                    } else {
+                        gd.clear(period);
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    // whether c has been fully scheduled for grade
+    private boolean gradeComplete(Course c, Grade g) {
+        int periodsFound = 0;
+        for (Day day : days) {
+            GradeDay gd = day.getGradeDay(g);
+            if (gd.count(c.code) > 0) {
+                periodsFound++;
+            }
+        }
+        return (periodsFound >= c.periods);
     }
 
 }

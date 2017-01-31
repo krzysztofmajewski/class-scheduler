@@ -9,14 +9,15 @@ package classscheduling;
  *
  * @author krzys
  */
-public enum Grade {
-    SEVEN("Grade 7"),
-    EIGHT("Grade 8"),
-    NINE("Grade 9");
+class Slot {
     
-    private final String name;
+    Day day;
+    GradeDay grade;
+    int period;
     
-    private Grade(String name) {
-        this.name = name;
+    @Override
+    public String toString() {
+        return "Slot: " + day.name + ", " + grade.name + ", period " + period;
     }
+    
 }

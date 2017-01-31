@@ -62,7 +62,7 @@ public class Course {
     public static Course Music() {
         Course m = new Course();
         m.name = "Music";
-        m.code = 'M';
+        m.code = 'U';
         m.periods = 3;
         m.daysOff = 1;
         return m;

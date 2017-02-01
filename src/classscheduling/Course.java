@@ -15,6 +15,10 @@ public class Course {
     char code;
     int periods;
     int daysOff = 0;
+    
+    private Course() {
+        
+    }
 
     public static Course Math() {
         Course m = new Course();

@@ -47,8 +47,8 @@ public class GradeDay {
         return result;
     }
     
-    public boolean hasCourse(char course, int period) {
-        return (periods[period - 1] == course);
+    public boolean hasCourse(char course, Period period) {
+        return (periods[period.ordinal()] == course);
     }
 
 

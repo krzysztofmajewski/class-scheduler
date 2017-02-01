@@ -37,10 +37,10 @@ class Day {
     
     public int count(char course) {
         int result = 0;
-        for (int period = 1; period <= GradeDay.PERIODS_PER_DAY; period++) {
-            if (grade7.hasCourse(course, period)
-                    || grade8.hasCourse(course, period)
-                    || grade9.hasCourse(course, period)) {
+        for (Period p : Period.values()) {
+            if (grade7.hasCourse(course, p)
+                    || grade8.hasCourse(course, p)
+                    || grade9.hasCourse(course, p)) {
                 result++;
             }
         }

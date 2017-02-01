@@ -13,6 +13,7 @@ import java.util.ArrayList;
  */
 public class ValidationErrors {
     
+    // TODO: performance test the exception throwing
     boolean strict = true;
     
     private final ArrayList<String> errors;

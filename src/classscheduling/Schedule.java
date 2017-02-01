@@ -16,6 +16,8 @@ import java.util.Stack;
 // TODO: review throws clauses
 public class Schedule {
 
+    public static final int MILLION = 1000000;
+
     int movesTried;
 
     Day monday;
@@ -76,8 +78,9 @@ public class Schedule {
     // TODO make smart decisions based on which constraint failed
     boolean fillSchedule(Slot lastFilledSlot) throws SanityCheckException {
         movesTried++;
-        if ((movesTried % 1000000) == 1) {
-            System.out.println(freeSlots() + " free slots left after " + movesTried + " moves:");
+        if ((movesTried % MILLION) == 1) {
+            System.out.println(freeSlots() + " free slots left after "
+                    + movesTried / MILLION + " million moves:");
             print();
         }
         errors.clear();
@@ -98,12 +101,14 @@ public class Schedule {
         }
         // schedule not complete
         for (Slot slot : getEmptySlots()) {
+            Course course = null;
+            Course actualCourse = null;
             if (lastFilledSlot == null) {
                 fillSlotWithNextAvailableCourse(slot);
             } else {
                 char c = lastFilledSlot.gradeDay.get(lastFilledSlot.period);
-                Course course = Course.forCode(c);
-                fillSlotWithCourse(slot, course);
+                course = Course.forCode(c);
+                actualCourse = fillSlotWithCourse(slot, course);
             }
             boolean success = fillSchedule(slot);
             // if the recursive call succeeded, we are done!
@@ -161,10 +166,10 @@ public class Schedule {
     // once violated, can be un-violated by filling more slots
     void validateNonMonotoneConstraints() {
         try {
-        frenchConferenceClass();
-        for (Course c : courses) {
-            enoughPeriodsPerWeek(c);
-        }
+            frenchConferenceClass();
+            for (Course c : courses) {
+                enoughPeriodsPerWeek(c);
+            }
         } catch (ValidationException ve) {
             // nop
         }
@@ -187,24 +192,28 @@ public class Schedule {
         return result;
     }
 
-    void fillSlotWithNextAvailableCourse(Slot slot
-    ) {
-        fillSlot(slot, todo());
+    Course fillSlotWithNextAvailableCourse(Slot slot) {
+        Course c = todo();
+        fillSlot(slot, c);
+        return c;
     }
 
-    void fillSlotWithCourse(Slot slot, Course c
-    ) {
+    Course fillSlotWithCourse(Slot slot, Course c) {
+        Course result = c;
         errors.clear();
         try {
             enoughPeriodsPerWeek(c);
         } catch (ValidationException ve) {
             // nop
         }
-        if (errors.hasErrors()) {
-            fillSlotWithNextAvailableCourse(slot);
+        if (errors.isEmpty()) {
+            // already enough periods
+            result = fillSlotWithNextAvailableCourse(slot);
         } else {
+            // not enough periods
             fillSlot(slot, c);
         }
+        return result;
     }
 
     void fillSlot(Slot slot, Course c

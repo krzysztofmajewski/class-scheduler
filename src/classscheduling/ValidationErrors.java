@@ -33,7 +33,7 @@ public class ValidationErrors {
 
     void print() {
         errors.forEach((s) -> {
-            System.err.println(s);
+            System.out.println(s);
         });
     }
 

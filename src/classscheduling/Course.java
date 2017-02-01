@@ -9,6 +9,7 @@ package classscheduling;
  *
  * @author krzys
  */
+// TODO enum
 public class Course {
 
     String name;
@@ -70,6 +71,25 @@ public class Course {
         m.periods = 3;
         m.daysOff = 1;
         return m;
-    }    
+    }
+    
+    public static Course forCode(char c) {
+        switch(c) {
+            case 'M' :
+                return Math();
+            case 'E' :
+                return English();
+            case 'F' :
+                return French();
+            case 'G' :
+                return Geography();
+            case 'A' :
+                return Art();
+            case 'U' :
+                return Music();
+            default :
+                return null;
+        }
+    }
     
 }

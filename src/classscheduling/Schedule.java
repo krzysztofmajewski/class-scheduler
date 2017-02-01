@@ -16,7 +16,7 @@ import java.util.Stack;
 // TODO: review throws clauses
 public class Schedule {
 
-    static int movesTried;
+    int movesTried;
 
     Day monday;
     Day tuesday;
@@ -35,9 +35,9 @@ public class Schedule {
 
     final ValidationErrors errors;
 
-    private final Day days[];
+    final Stack<Slot> history;
 
-    private final Stack<Slot> history;
+    private final Day days[];
 
     public Schedule() {
         monday = new Day("Monday");
@@ -76,9 +76,8 @@ public class Schedule {
 //    Slot peek() {
 //        return history.peek();
 //    }
-    
     // TODO make smart decisions based on which constraint failed
-    boolean fillSchedule() throws Exception {
+    boolean fillSchedule(Slot lastFilledSlot) throws Exception {
         movesTried++;
         if ((movesTried % 1000000) == 1) {
             System.out.println(freeSlots() + " free slots left after " + movesTried + " moves:");
@@ -102,22 +101,26 @@ public class Schedule {
         }
         // schedule not complete
         for (Slot slot : getEmptySlots()) {
-            for (Course c : courses) {
-                // fill an arbitrary free slot with an arbitrary course
-                fillSlot(slot, c);
-                boolean success = fillSchedule();
-                // if the recursive call succeeded, we are done!
-                if (success) {
-                    return true;
-                }
-                // no solution from this move, roll back
-                undo(slot);
+            if (lastFilledSlot == null) {
+                fillSlotWithNextAvailableCourse(slot);
+            } else {
+                char c = lastFilledSlot.gradeDay.get(lastFilledSlot.period);
+                Course course = Course.forCode(c);
+                fillSlotWithCourse(slot, course);
             }
+            boolean success = fillSchedule(slot);
+            // if the recursive call succeeded, we are done!
+            if (success) {
+                return true;
+            }
+            // no solution from this move, roll back
+            undo(slot);
         }
+
         // no empty slot yields a winner
         return false;
     }
-    
+
     List<Slot> getEmptySlots() {
         ArrayList<Slot> result = new ArrayList<>();
 
@@ -161,20 +164,33 @@ public class Schedule {
         }
     }
 
-//    // TODO: randomize?
-//    Course todo() {
-//        Course result = null;
-//        errors.clear();
-//
-//        for (Course c : courses) {
-//            validatePeriodsPerWeek(c);
-//            if (!errors.isEmpty()) {
-//                return c;
-//            }
-//        }
-//        return result;
-//    }
-    
+    Course todo() {
+        Course result = null;
+        errors.clear();
+
+        for (Course c : courses) {
+            enoughPeriodsPerWeek(c);
+            if (errors.hasErrors()) {
+                return c;
+            }
+        }
+        return result;
+    }
+
+    void fillSlotWithNextAvailableCourse(Slot slot) {
+        fillSlot(slot, todo());
+    }
+
+    void fillSlotWithCourse(Slot slot, Course c) {
+        errors.clear();
+        enoughPeriodsPerWeek(c);
+        if (errors.hasErrors()) {
+            fillSlotWithNextAvailableCourse(slot);
+        } else {
+            fillSlot(slot, c);
+        }
+    }
+
     void fillSlot(Slot slot, Course c) {
         GradeDay gd = slot.gradeDay;
         Period p = slot.period;

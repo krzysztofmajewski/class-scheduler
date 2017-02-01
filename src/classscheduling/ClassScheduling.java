@@ -7,7 +7,6 @@ package classscheduling;
 
 import static classscheduling.Period.FIRST;
 import static classscheduling.Period.SECOND;
-import static classscheduling.Period.THIRD;
 import static classscheduling.Period.FOURTH;
 
 /**
@@ -16,7 +15,6 @@ import static classscheduling.Period.FOURTH;
  */
 public class ClassScheduling {
 
-    static int movesTried;
 
     /**
      * @param args the command line arguments
@@ -30,12 +28,12 @@ public class ClassScheduling {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                System.out.println(movesTried + " moves tried");
+                System.out.println(Schedule.movesTried + " moves tried");
                 example.print();
             }
         });
 
-        if (fillSchedule(example)) {
+        if (example.fillSchedule()) {
             System.out.println("success!");
             example.print();
         } else {
@@ -47,47 +45,6 @@ public class ClassScheduling {
         example.errors.print();
     }
 
-    // TODO make smart decisions based on which constraint failed
-    private static boolean fillSchedule(Schedule s) throws Exception {
-        movesTried++;
-        if ((movesTried % 1000000) == 1) {
-            System.out.println(s.freeSlots() + " free slots left after "
-                    + movesTried + " moves:");
-            s.print();
-        }
-        s.errors.clear();
-        s.validate();
-        if (s.errors.isEmpty()) {
-            return true;
-        }
-        s.errors.clear();
-        s.validateMonotoneConstraints();
-        if (s.errors.hasErrors()) {
-            // adding more slots won't help us
-            return false;
-        }
-        s.errors.clear();
-        s.validateNonMonotoneConstraints();
-        if (s.errors.isEmpty()) {
-            throw new Exception("sanity check failed");
-        }
-        // schedule not complete
-        for (Slot slot : s.getEmptySlots()) {
-            for (Course c : s.courses) {
-                // fill an arbitrary free slot with an arbitrary course
-                s.fillSlot(slot, c);
-                boolean success = fillSchedule(s);
-                // if the recursive call succeeded, we are done!
-                if (success) {
-                    return true;
-                }
-                // no solution from this move, roll back
-                s.undo(slot);
-            }
-        }
-        // no empty slot yields a winner
-        return false;
-    }
 
     private static Schedule exampleSchedule() throws Exception {
         Schedule schedule = new Schedule();

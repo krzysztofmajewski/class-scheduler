@@ -16,6 +16,8 @@ import java.util.Stack;
 // TODO: review throws clauses
 public class Schedule {
 
+    static int movesTried;
+
     Day monday;
     Day tuesday;
     Day wednesday;
@@ -74,6 +76,48 @@ public class Schedule {
 //    Slot peek() {
 //        return history.peek();
 //    }
+    
+    // TODO make smart decisions based on which constraint failed
+    boolean fillSchedule() throws Exception {
+        movesTried++;
+        if ((movesTried % 1000000) == 1) {
+            System.out.println(freeSlots() + " free slots left after " + movesTried + " moves:");
+            print();
+        }
+        errors.clear();
+        validate();
+        if (errors.isEmpty()) {
+            return true;
+        }
+        errors.clear();
+        validateMonotoneConstraints();
+        if (errors.hasErrors()) {
+            // adding more slots won't help us
+            return false;
+        }
+        errors.clear();
+        validateNonMonotoneConstraints();
+        if (errors.isEmpty()) {
+            throw new Exception("sanity check failed");
+        }
+        // schedule not complete
+        for (Slot slot : getEmptySlots()) {
+            for (Course c : courses) {
+                // fill an arbitrary free slot with an arbitrary course
+                fillSlot(slot, c);
+                boolean success = fillSchedule();
+                // if the recursive call succeeded, we are done!
+                if (success) {
+                    return true;
+                }
+                // no solution from this move, roll back
+                undo(slot);
+            }
+        }
+        // no empty slot yields a winner
+        return false;
+    }
+    
     List<Slot> getEmptySlots() {
         ArrayList<Slot> result = new ArrayList<>();
 

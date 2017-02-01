@@ -12,12 +12,12 @@ package classscheduling;
 public class GradeDay {
     public static final int PERIODS_PER_DAY = Period.values().length;
     
+    Grade grade;
+
     final private char[] periods;
-    
-    String name;
-    
-    public GradeDay(String name) {
-        this.name = name;
+        
+    public GradeDay(Grade grade) {
+        this.grade = grade;
         periods = new char[PERIODS_PER_DAY];
     }
     

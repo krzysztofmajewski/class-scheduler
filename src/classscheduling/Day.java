@@ -5,6 +5,10 @@
  */
 package classscheduling;
 
+import static classscheduling.Grade.EIGHT;
+import static classscheduling.Grade.NINE;
+import static classscheduling.Grade.SEVEN;
+
 /**
  *
  * @author krzys
@@ -19,9 +23,9 @@ class Day {
     public Day(String name) {
         this.name = name;
         
-        grade7 = new GradeDay("Grade 7");
-        grade8 = new GradeDay("Grade 8");
-        grade9 = new GradeDay("Grade 9");
+        grade7 = new GradeDay(SEVEN);
+        grade8 = new GradeDay(EIGHT);
+        grade9 = new GradeDay(NINE);
     }
     
     public GradeDay getGradeDay(Grade g) {

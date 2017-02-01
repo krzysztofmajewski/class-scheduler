@@ -89,7 +89,7 @@ public class Schedule {
             return true;
         }
         errors.clear();
-        validateMonotoneConstraints();
+        validateMonotoneConstraints(lastFilledSlot);
         if (errors.hasErrors()) {
             // adding more slots won't help us
             return false;
@@ -143,15 +143,16 @@ public class Schedule {
     }
 
     void validate() {
-        validateMonotoneConstraints();
+        validateMonotoneConstraints(null);
         validateNonMonotoneConstraints();
     }
 
     // once violated, cannot be un-violated by filling more slots
-    void validateMonotoneConstraints() {
+    void validateMonotoneConstraints(Slot slot) {
         try {
             noCourseTwicePerDay();
             teacherHasAtMostThreePeriodsPerDay();
+            conflictsWithConference(slot);
             for (Course c : courses) {
                 notTooManyPeriodsPerWeek(c);
                 teacherDaysOff(c);
@@ -216,8 +217,7 @@ public class Schedule {
         return result;
     }
 
-    void fillSlot(Slot slot, Course c
-    ) {
+    void fillSlot(Slot slot, Course c) {
         GradeDay gd = slot.gradeDay;
         Period p = slot.period;
         gd.set(p, c.code);
@@ -278,17 +278,17 @@ public class Schedule {
         for (Course c : courses) {
             for (Day day : days) {
                 if (day.grade7.count(c.code) > 1) {
-                    errors.add(day.grade7.name + ": too many " + c.name + " classes"
+                    errors.add(day.grade7.grade.name() + ": too many " + c.name + " classes"
                             + " on " + day.name);
                 }
 
                 if (day.grade8.count(c.code) > 1) {
-                    errors.add(day.grade8.name + ": too many " + c.name + " classes"
+                    errors.add(day.grade8.grade.name() + ": too many " + c.name + " classes"
                             + " on " + day.name);
                 }
 
                 if (day.grade9.count(c.code) > 1) {
-                    errors.add(day.grade9.name + ": too many " + c.name + " classes"
+                    errors.add(day.grade9.grade.name() + ": too many " + c.name + " classes"
                             + " on " + day.name);
                 }
             }
@@ -373,4 +373,33 @@ public class Schedule {
         }
     }
 
+    private void conflictsWithConference(Slot slot) throws ValidationException {
+       if (slot == null) {
+           // this validation is redundant when applied to the whole schedule
+           return;
+       }
+       GradeDay slotGradeDay = slot.gradeDay;
+       Period slotPeriod = slot.period;
+       char slotCourse = slotGradeDay.get(slotPeriod);
+       Day slotDay = slot.day;
+       for (Grade g : Grade.values()) {
+           if (g.equals(slotGradeDay.grade)) {
+               // cannot conflict with itself
+               continue;
+           }
+           GradeDay gd = slotDay.getGradeDay(g);
+           char c = gd.get(slotPeriod);
+           if ((c != 'F') && (slotCourse != 'F')) {
+               // irrelevant, but maybe some other grade has 'F' in this period
+               continue;
+           }
+           if ((c == 'F') && (slotCourse == 'F')) {
+               // all good, but maybe some other grade has not-'F' in this period
+               continue;
+           }
+           // one of the two has 'F', but not both
+           errors.add("French conference conflict in " + slotPeriod 
+                   + " on " + slotDay);
+       }
+    }
 }

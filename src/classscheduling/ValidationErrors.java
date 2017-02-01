@@ -13,14 +13,19 @@ import java.util.ArrayList;
  */
 public class ValidationErrors {
     
+    boolean strict = true;
+    
     private final ArrayList<String> errors;
     
     public ValidationErrors() {
         errors = new ArrayList<>();
     }
     
-    public void add(String s) {
+    public void add(String s) throws ValidationException {
         errors.add(s);
+        if (strict) {
+            throw new ValidationException(s);
+        }
     }
     
     public boolean isEmpty() {

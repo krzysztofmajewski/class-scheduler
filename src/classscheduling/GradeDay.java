@@ -29,10 +29,10 @@ public class GradeDay {
         return periods[period.ordinal()];
     }
 
-    public void clear(Period period) throws Exception {
+    public void clear(Period period) throws SanityCheckException {
         if (get(period) == 0) {
             String msg = String.format(period + " already cleared");
-            throw new Exception(msg);
+            throw new SanityCheckException(msg);
         }
         periods[period.ordinal()] = 0;
     }

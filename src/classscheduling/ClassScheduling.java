@@ -8,14 +8,12 @@ package classscheduling;
 import static classscheduling.Period.FIRST;
 import static classscheduling.Period.SECOND;
 import static classscheduling.Period.FOURTH;
-import static classscheduling.Period.THIRD;
 
 /**
  *
  * @author krzys
  */
 public class ClassScheduling {
-
 
     /**
      * @param args the command line arguments
@@ -24,7 +22,6 @@ public class ClassScheduling {
     public static void main(String[] args) throws Exception {
 
         Schedule example = exampleSchedule();
-//        example.print();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -42,6 +39,7 @@ public class ClassScheduling {
             System.out.println("failed.");
         }
         example.errors.clear();
+        example.errors.strict = false;
         example.validate();
         // this should not print anything in case of success
         example.errors.print();

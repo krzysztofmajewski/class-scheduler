@@ -73,11 +73,8 @@ public class Schedule {
         history = new Stack<>();
     }
 
-//    Slot peek() {
-//        return history.peek();
-//    }
     // TODO make smart decisions based on which constraint failed
-    boolean fillSchedule(Slot lastFilledSlot) throws Exception {
+    boolean fillSchedule(Slot lastFilledSlot) throws SanityCheckException {
         movesTried++;
         if ((movesTried % 1000000) == 1) {
             System.out.println(freeSlots() + " free slots left after " + movesTried + " moves:");
@@ -97,7 +94,7 @@ public class Schedule {
         errors.clear();
         validateNonMonotoneConstraints();
         if (errors.isEmpty()) {
-            throw new Exception("sanity check failed");
+            throw new SanityCheckException("sanity check failed");
         }
         // schedule not complete
         for (Slot slot : getEmptySlots()) {
@@ -147,20 +144,29 @@ public class Schedule {
 
     // once violated, cannot be un-violated by filling more slots
     void validateMonotoneConstraints() {
-        noCourseTwicePerDay();
-        teacherHasAtMostThreePeriodsPerDay();
-        for (Course c : courses) {
-            notTooManyPeriodsPerWeek(c);
-            teacherDaysOff(c);
-            teacherOneSlotAtATime(c);
+        try {
+            noCourseTwicePerDay();
+            teacherHasAtMostThreePeriodsPerDay();
+            for (Course c : courses) {
+                notTooManyPeriodsPerWeek(c);
+                teacherDaysOff(c);
+                teacherOneSlotAtATime(c);
+            }
+        } catch (ValidationException ve) {
+            // nop
+            boolean nop = true;
         }
     }
 
     // once violated, can be un-violated by filling more slots
     void validateNonMonotoneConstraints() {
+        try {
         frenchConferenceClass();
         for (Course c : courses) {
             enoughPeriodsPerWeek(c);
+        }
+        } catch (ValidationException ve) {
+            // nop
         }
     }
 
@@ -169,7 +175,11 @@ public class Schedule {
         errors.clear();
 
         for (Course c : courses) {
-            enoughPeriodsPerWeek(c);
+            try {
+                enoughPeriodsPerWeek(c);
+            } catch (ValidationException ve) {
+                // nop
+            }
             if (errors.hasErrors()) {
                 return c;
             }
@@ -177,13 +187,19 @@ public class Schedule {
         return result;
     }
 
-    void fillSlotWithNextAvailableCourse(Slot slot) {
+    void fillSlotWithNextAvailableCourse(Slot slot
+    ) {
         fillSlot(slot, todo());
     }
 
-    void fillSlotWithCourse(Slot slot, Course c) {
+    void fillSlotWithCourse(Slot slot, Course c
+    ) {
         errors.clear();
-        enoughPeriodsPerWeek(c);
+        try {
+            enoughPeriodsPerWeek(c);
+        } catch (ValidationException ve) {
+            // nop
+        }
         if (errors.hasErrors()) {
             fillSlotWithNextAvailableCourse(slot);
         } else {
@@ -191,40 +207,21 @@ public class Schedule {
         }
     }
 
-    void fillSlot(Slot slot, Course c) {
+    void fillSlot(Slot slot, Course c
+    ) {
         GradeDay gd = slot.gradeDay;
         Period p = slot.period;
         gd.set(p, c.code);
         history.push(slot);
     }
 
-    void undo(Slot slot) throws Exception {
+    void undo(Slot slot) throws SanityCheckException {
         GradeDay gd = slot.gradeDay;
         Period p = slot.period;
         gd.clear(p);
         history.pop();
     }
 
-//    // assume the current configuration has no validation errors
-//    // this implies that c is not partially scheduled
-//    // TODO: randomize?
-//    boolean scheduleOneSlot(Course c) throws Exception {
-//        errors.clear();
-//
-//        for (Grade g : Grade.values()) {
-//            if (!gradeComplete(c, g)) {
-//                return scheduleOnePeriod(c, g);
-//            }
-//        }
-//        // TODO: is this ever reached?
-//        return false;
-//    }
-//
-//    // undo the previously scheduled slot
-//    void backTrack() throws Exception {
-//        Slot slot = history.pop();
-//        slot.gradeDay.clear(slot.period);
-//    }
     int freeSlots() {
         return getEmptySlots().size();
     }
@@ -242,7 +239,7 @@ public class Schedule {
         }
     }
 
-    private void enoughPeriodsPerWeek(Course course) {
+    private void enoughPeriodsPerWeek(Course course) throws ValidationException {
         for (Grade g : Grade.values()) {
             int gradeCount = 0;
             for (Day day : days) {
@@ -255,7 +252,7 @@ public class Schedule {
         }
     }
 
-    private void notTooManyPeriodsPerWeek(Course course) {
+    private void notTooManyPeriodsPerWeek(Course course) throws ValidationException {
         for (Grade g : Grade.values()) {
             int gradeCount = 0;
             for (Day day : days) {
@@ -268,7 +265,7 @@ public class Schedule {
         }
     }
 
-    private void noCourseTwicePerDay() {
+    private void noCourseTwicePerDay() throws ValidationException {
         for (Course c : courses) {
             for (Day day : days) {
                 if (day.grade7.count(c.code) > 1) {
@@ -289,7 +286,7 @@ public class Schedule {
         }
     }
 
-    private void teacherOneSlotAtATime(Course c) {
+    private void teacherOneSlotAtATime(Course c) throws ValidationException {
         // French is a conference class
         if (c.code == 'F') {
             return;
@@ -311,7 +308,7 @@ public class Schedule {
         }
     }
 
-    private void teacherHasAtMostThreePeriodsPerDay() {
+    private void teacherHasAtMostThreePeriodsPerDay() throws ValidationException {
         for (Day day : days) {
             for (Course c : courses) {
                 if ((c.code != 'F') && (c.code != 'G')) {
@@ -329,7 +326,7 @@ public class Schedule {
         }
     }
 
-    private void frenchConferenceClass() {
+    private void frenchConferenceClass() throws ValidationException {
         for (Day day : days) {
             for (Period p : Period.values()) {
                 if (!allGradesHaveFrench(day, p)
@@ -353,7 +350,7 @@ public class Schedule {
                 || day.grade9.hasCourse('F', period));
     }
 
-    private void teacherDaysOff(Course course) {
+    private void teacherDaysOff(Course course) throws ValidationException {
         int daysOn = 0;
         for (Day day : days) {
             if (day.count(course.code) > 0) {
@@ -367,39 +364,4 @@ public class Schedule {
         }
     }
 
-//    // schedules one period of c, if possible
-//    private boolean scheduleOnePeriod(Course c, Grade g) throws Exception {
-//        for (Day day : days) {
-//            for (Period period : Period.values()) {
-//                GradeDay gd = day.getGradeDay(g);
-//                if (gd.get(period) == 0) {
-//                    gd.set(period, c.code);
-//                    errors.clear();
-//                    validateMonotoneConstraints();
-//                    if (errors.isEmpty()) {
-//                        Slot slot = new Slot();
-//                        slot.day = day;
-//                        slot.gradeDay = gd;
-//                        slot.period = period;
-//                        history.push(slot);
-//                        return true;
-//                    } else {
-//                        gd.clear(period);
-//                    }
-//                }
-//            }
-//        }
-//        return false;
-//    }
-//    // whether c has been fully scheduled for grade
-//    private boolean gradeComplete(Course c, Grade g) {
-//        int periodsFound = 0;
-//        for (Day day : days) {
-//            GradeDay gd = day.getGradeDay(g);
-//            if (gd.count(c.code) > 0) {
-//                periodsFound++;
-//            }
-//        }
-//        return (periodsFound >= c.periods);
-//    }
 }

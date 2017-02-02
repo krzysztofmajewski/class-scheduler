@@ -13,19 +13,25 @@ import static classscheduling.Grade.SEVEN;
  *
  * @author krzys
  */
-class Day {    
+public enum Day {
+    
+    MONDAY("Monday"),
+    TUESDAY("Tuesday"),
+    WEDNESDAY("Wednesday"),
+    THURSDAY("Thursday"),
+    FRIDAY("Friday");
+
+    final String name;
     final GradeDay grade7;
     final GradeDay grade8;
     final GradeDay grade9;
     
-    final String name;
-    
-    public Day(String name) {
+    private Day(String name) {
         this.name = name;
         
-        grade7 = new GradeDay(SEVEN);
-        grade8 = new GradeDay(EIGHT);
-        grade9 = new GradeDay(NINE);
+        grade7 = new GradeDay(SEVEN, this);
+        grade8 = new GradeDay(EIGHT, this);
+        grade9 = new GradeDay(NINE, this);
     }
     
     public GradeDay getGradeDay(Grade g) {
@@ -52,7 +58,7 @@ class Day {
     }
     
     @Override
-    public String toString() {
+        public String toString() {
         return name;
     }
 

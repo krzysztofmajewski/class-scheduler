@@ -9,84 +9,42 @@ package classscheduling;
  *
  * @author krzys
  */
-// TODO enum
-public class Course {
-
-    String name;
-    char code;
-    int periods;
-    int daysOff = 0;
+public enum Course {
     
-    private Course() {
-        
-    }
-
-    public static Course Math() {
-        Course m = new Course();
-        m.name = "Math";
-        m.code = 'M';
-        m.periods = 4;
-        m.daysOff = 1;
-        return m;
-    }
-
-    public static Course English() {
-        Course e = new Course();
-        e.name = "English";
-        e.code = 'E';
-        e.periods = 4;
-        e.daysOff = 1;
-        return e;
-    }
-
-    public static Course French() {
-        Course f = new Course();
-        f.name = "French";
-        f.code = 'F';
-        f.periods = 5;
-        return f;
-    }
-
-    public static Course Geography() {
-        Course g = new Course();
-        g.name = "Geography";
-        g.code = 'G';
-        g.periods = 2;
-        return g;
-    }
-
-    public static Course Art() {
-        Course a = new Course();
-        a.name = "Art";
-        a.code = 'A';
-        a.periods = 2;
-        a.daysOff = 2;
-        return a;
-    }
+    MATH("Math", 'M', 4, 1),
+    ENGLISH("English", 'E', 4, 1),
+    FRENCH("French", 'F', 5, 0),
+    GEOGRAPHY("Geography", 'G', 2, 0),
+    ART("Art", 'A', 2, 2),
+    MUSIC("Music", 'U', 3, 1);
     
-    public static Course Music() {
-        Course m = new Course();
-        m.name = "Music";
-        m.code = 'U';
-        m.periods = 3;
-        m.daysOff = 1;
-        return m;
+
+    final String name;
+    final char code;
+    final int periods;
+    final int daysOff;
+    
+    private Course(String name, char code, int periods, int daysOff) {
+        this.name = name;
+        this.code = code;
+        this.periods = periods;
+        this.daysOff = daysOff;
     }
     
     public static Course forCode(char c) {
         switch(c) {
             case 'M' :
-                return Math();
+                return MATH;
             case 'E' :
-                return English();
+                return ENGLISH;
             case 'F' :
-                return French();
+                return FRENCH;
             case 'G' :
-                return Geography();
+                return GEOGRAPHY;
             case 'A' :
-                return Art();
+                return ART;
             case 'U' :
-                return Music();
+                return MUSIC;
             default :
                 return null;
         }

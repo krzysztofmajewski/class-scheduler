@@ -13,11 +13,13 @@ public class GradeDay {
     public static final int PERIODS_PER_DAY = Period.values().length;
     
     Grade grade;
+    Day day;
 
     final private char[] periods;
         
-    public GradeDay(Grade grade) {
+    public GradeDay(Grade grade, Day day) {
         this.grade = grade;
+        this.day = day;
         periods = new char[PERIODS_PER_DAY];
     }
     

@@ -40,7 +40,7 @@ public class ClassScheduling {
         }
         example.errors.clear();
         example.errors.strict = false;
-        example.validate();
+        example.validate(null);
         // this should not print anything in case of success
         example.errors.print();
     }

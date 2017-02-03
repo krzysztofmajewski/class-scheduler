@@ -13,20 +13,14 @@ import java.util.ArrayList;
  */
 public class ValidationErrors {
     
-    // TODO: performance test the exception throwing
-    boolean strict = true;
-    
     private final ArrayList<String> errors;
     
     public ValidationErrors() {
         errors = new ArrayList<>();
     }
     
-    public void add(String s) throws ValidationException {
+    public void add(String s) {
         errors.add(s);
-        if (strict) {
-            throw new ValidationException(s);
-        }
     }
     
     public boolean isEmpty() {

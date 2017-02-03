@@ -37,15 +37,14 @@ public class ClassScheduling {
             }
         });
 
-        if (example.fillSchedule(null)) {
+        if (example.fillSchedule()) {
             System.out.println("success!");
             example.print();
         } else {
             System.out.println("failed.");
         }
         example.errors.clear();
-        example.errors.strict = false;
-        example.validate(null);
+        example.validate();
         // this should not print anything in case of success
         example.errors.print();
     }

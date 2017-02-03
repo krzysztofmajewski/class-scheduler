@@ -30,6 +30,11 @@ public class GradeDay {
     public char get(Period period) {
         return periods[period.ordinal()];
     }
+    
+    public Course getCourse(Period period) {
+        char c = get(period);
+        return Course.forCode(c);
+    }
 
     public void clear(Period period) throws SanityCheckException {
         if (get(period) == 0) {

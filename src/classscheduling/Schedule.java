@@ -5,278 +5,228 @@
  */
 package classscheduling;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 /**
  *
  * @author krzys
  */
+// TODO: review throws clauses
 public class Schedule {
 
-    Day monday;
-    Day tuesday;
-    Day wednesday;
-    Day thursday;
-    Day friday;
+    public static final int MILLION = 1000000;
 
-    Course math;
-    Course english;
-    Course french;
-    Course geography;
-    Course art;
-    Course music;
+    int movesTried;
+    int freeSlots = 60;
 
-    private final Day days[];
+    final ValidationErrors errors;
 
-    private final Course courses[];
+    final Stack<Slot> history;
 
-    private final ValidationErrors errors;
-
-    private final Stack<Slot> history;
+    private ScheduleValidator validator;
 
     public Schedule() {
-        monday = new Day("Monday");
-        tuesday = new Day("Tuesday");
-        wednesday = new Day("Wednesday");
-        thursday = new Day("Thursday");
-        friday = new Day("Friday");
-
-        math = Course.Math();
-        english = Course.English();
-        french = Course.French();
-        geography = Course.Geography();
-        art = Course.Art();
-        music = Course.Music();
-
-        days = new Day[5];
-        days[0] = monday;
-        days[1] = tuesday;
-        days[2] = wednesday;
-        days[3] = thursday;
-        days[4] = friday;
-
-        courses = new Course[6];
-        courses[0] = math;
-        courses[1] = english;
-        courses[2] = french;
-        courses[3] = geography;
-        courses[4] = art;
-        courses[5] = music;
 
         errors = new ValidationErrors();
 
         history = new Stack<>();
+
+        validator = new ScheduleValidator(this);
     }
 
-    public Slot peek() {
-        return history.peek();
-    }
-    
-    ValidationErrors validate() {
-        for (Course c : courses) {
-            validatePeriodsPerWeek(c);
-        }
-        noCourseTwicePerDay();
-        noTeacherHasFourPeriodsPerDay();
-        frenchConferenceClass();
-        for (Course c : courses) {
-            teacherDaysOff(c);
-        }
-        return errors;
+    boolean fillSchedule() throws SanityCheckException {
+        return fillSchedule(null, initFreeSlotList());
     }
 
-    void validateConstraints() {
-        noCourseTwicePerDay();
-        noTeacherHasFourPeriodsPerDay();
-        frenchConferenceClass();
-        for (Course c : courses) {
-            teacherDaysOff(c);
-        }
-    }
-
-    private void validatePeriodsPerWeek(Course course) {
-
-        int grade7Count = 0;
-        int grade8Count = 0;
-        int grade9Count = 0;
-
-        for (Day day : days) {
-            grade7Count += day.grade7.count(course.code);
-            grade8Count += day.grade8.count(course.code);
-            grade9Count += day.grade9.count(course.code);
-        }
-
-        if (grade7Count != course.periods) {
-            errors.add("Grade 7: expected " + course.periods + " periods of "
-                    + course.name + ", found " + grade7Count);
-        }
-
-        if (grade8Count != course.periods) {
-            errors.add("Grade 8: expected " + course.periods + " periods of "
-                    + course.name + ", found " + grade8Count);
-        }
-
-        if (grade9Count != course.periods) {
-            errors.add("Grade 9: expected " + course.periods + " periods of "
-                    + course.name + ", found " + grade9Count);
-        }
-    }
-
-    private void noCourseTwicePerDay() {
-        for (Course c : courses) {
-            for (Day day : days) {
-                if (day.grade7.count(c.code) > 1) {
-                    errors.add(day.grade7.name + ": too many " + c.name + " classes"
-                            + " on " + day.name);
-                }
-
-                if (day.grade8.count(c.code) > 1) {
-                    errors.add(day.grade8.name + ": too many " + c.name + " classes"
-                            + " on " + day.name);
-                }
-
-                if (day.grade9.count(c.code) > 1) {
-                    errors.add(day.grade9.name + ": too many " + c.name + " classes"
-                            + " on " + day.name);
-                }
+    // TODO make smart decisions based on which constraint failed
+    private boolean fillSchedule(Slot lastFilledSlot, List<Slot> freeSlotList) throws SanityCheckException {
+        movesTried++;
+        // print a status update every once in a while
+        if ((movesTried % MILLION) == 1) {
+            System.out.println(freeSlots + " free slots left after "
+                    + movesTried / MILLION + " million moves:");
+            print();
+            if (freeSlots == 0) {
+                errors.clear();
+                validate();
+                errors.print();
             }
         }
-    }
-
-    private void noTeacherHasFourPeriodsPerDay() {
-        for (Day day : days) {
-            if (day.count('M') > 3) {
-                errors.add("Math teacher has too many periods on "
-                        + day.name);
-            }
-            if (day.count('E') > 3) {
-                errors.add("English teacher has too many periods on "
-                        + day.name);
-            }
-            int frenchAndGeoPeriods = day.count('F') + day.count('G');
-            if (frenchAndGeoPeriods > 3) {
-                errors.add("French/Geography teacher has too many periods on "
-                        + day.name);
-            }
-            if (day.count('A') > 3) {
-                errors.add("Art teacher has too many periods on "
-                        + day.name);
-            }
-            if (day.count('U') > 3) {
-                errors.add("Music teacher has too many periods on "
-                        + day.name);
+        // check if we are done
+        if (freeSlots == 0) {
+            errors.clear();
+            // TODO: should we validate the whole schedule?
+            validate(lastFilledSlot);
+            if (errors.isEmpty()) {
+                return true;
             }
         }
-    }
-
-    private void frenchConferenceClass() {
-        for (Day day : days) {
-            for (int period = 1; period <= GradeDay.PERIODS_PER_DAY; period++) {
-                if (!allGradesHaveFrench(day, period)
-                        && !noGradesHaveFrench(day, period)) {
-                    errors.add("French class in period " + period
-                            + " on " + day.name + " must be shared by all grades");
-                }
-            }
-        }
-    }
-
-    private boolean allGradesHaveFrench(Day day, int period) {
-        return day.grade7.hasCourse('F', period)
-                && day.grade8.hasCourse('F', period)
-                && day.grade9.hasCourse('F', period);
-    }
-
-    private boolean noGradesHaveFrench(Day day, int period) {
-        return !(day.grade7.hasCourse('F', period)
-                || day.grade8.hasCourse('F', period)
-                || day.grade9.hasCourse('F', period));
-    }
-
-    private void teacherDaysOff(Course course) {
-        int daysOn = 0;
-        for (Day day : days) {
-            if (day.count(course.code) > 0) {
-                daysOn++;
-            }
-        }
-        boolean enoughDaysOff = ((5 - daysOn) >= course.daysOff);
-        if (!enoughDaysOff) {
-            errors.add("Teacher of " + course + " has only "
-                    + (5 - daysOn) + " days off instead of " + course.daysOff);
-        }
-    }
-
-    // TODO: randomize?
-    Course todo() {
-        Course result = null;
         errors.clear();
+        // check for correctness of current schedule
+        validator.validateCorrectnessConstraints(lastFilledSlot);
+        if (errors.hasErrors()) {
+            // adding more slots won't help us
+            return false;
+        }
+        // schedule correct but not complete
+        for (Slot slot : freeSlotList) {
+            Course course = null;
+            Course actualCourse = null;
+            if (lastFilledSlot == null) {
+                fillSlotWithNextAvailableCourse(slot);
+            } else {
+                char c = lastFilledSlot.gradeDay.get(lastFilledSlot.period);
+                course = Course.forCode(c);
+                actualCourse = fillSlotWithCourse(slot, course);
+                if (!actualCourse.equals(course)) {
+                    // nop
+                    boolean nop = true;
+                }
+            }
+            List<Slot> smallerFreeSlotList = new ArrayList<>(freeSlotList);
+            boolean ok = smallerFreeSlotList.remove(slot);
+            if (!ok) {
+                throw new SanityCheckException(slot + " not found in free slot list");
+            }
+            boolean success = fillSchedule(slot, smallerFreeSlotList);
+            // if the recursive call succeeded, we are done!
+            if (success) {
+                return true;
+            }
+            // no solution from this move, try another slot
+            clear(slot);
+        }
+        // no empty slot yields a winner
+        return false;
+    }
 
-        for (Course c : courses) {
-            validatePeriodsPerWeek(c);
-            if (!errors.isEmpty()) {
-                return c;
+    void set(Day day, Grade grade, Period period, Course course) throws SanityCheckException {
+        GradeDay gd = day.getGradeDay(grade);
+        Slot s = new Slot();
+        s.day = day;
+        s.gradeDay = gd;
+        s.period = period;
+        set(s, course);
+    }
+
+    private void set(Slot slot, Course course) throws SanityCheckException {
+        char c = slot.gradeDay.get(slot.period);
+        if (c != 0) {
+            throw new SanityCheckException(slot + " already has a course: " + c);
+        }
+        slot.gradeDay.set(slot.period, course.code);
+        freeSlots--;
+        history.push(slot);
+        course.incrementPeriodsScheduled(slot);
+    }
+
+    void clear(Slot slot) throws SanityCheckException {
+        Course course = slot.getCourse();
+        course.decrementPeriodsScheduled(slot);
+        slot.gradeDay.clear(slot.period);
+        freeSlots++;
+        Slot lastFilledSlot = history.pop();
+        if (!lastFilledSlot.equals(slot)) {
+            throw new SanityCheckException("last filled is " + lastFilledSlot
+                    + ", expected " + slot);
+        }
+    }
+
+    private List<Slot> initFreeSlotList() {
+        ArrayList<Slot> result = new ArrayList<>();
+        for (Day day : Day.values()) {
+            for (Grade g : Grade.values()) {
+                for (Period p : Period.values()) {
+                    if (day.getGradeDay(g).get(p) == 0) {
+                        Slot slot = new Slot();
+                        slot.day = day;
+                        slot.gradeDay = day.getGradeDay(g);
+                        slot.period = p;
+                        result.add(slot);
+                    }
+                }
             }
         }
         return result;
     }
 
-    // assume the current configuration has no validation errors
-    // this implies that c is not partially scheduled
-    // TODO: randomize?
-    boolean scheduleOneSlot(Course c) throws Exception {
+    void validate() {
+        validator.validateCorrectnessConstraints();
+        validator.validateCompletenessConstraints();
+    }
+
+    void validate(Slot lastFilledSlot) throws SanityCheckException {
+        validator.validateCorrectnessConstraints(lastFilledSlot);
+        validator.validateCompletenessConstraints(lastFilledSlot);
+    }
+
+    Course todo() {
+        Course result = null;
         errors.clear();
+        for (Course course : Course.values()) {
+            if (!enoughPeriodsPerWeek(course)) {
+                result = course;
+                break;
+            }
+        }
+        return result;
+    }
 
+    Course fillSlotWithNextAvailableCourse(Slot slot) throws SanityCheckException {
+        Course c = todo();
+        set(slot, c);
+        return c;
+    }
+
+    Course fillSlotWithCourse(Slot slot, Course course) throws SanityCheckException {
+        Course result = course;
+        errors.clear();
+        if (enoughPeriodsPerWeek(course)) {
+            // already enough periods
+            result = fillSlotWithNextAvailableCourse(slot);
+        } else {
+            // not enough periods yet, fill the slot
+            set(slot, course);
+        }
+        return result;
+    }
+
+    boolean enoughPeriodsPerWeek(Course course) {
         for (Grade g : Grade.values()) {
-            if (!gradeComplete(c, g)) {
-                return scheduleOnePeriod(c, g);
+            if (course.getPeriodsScheduled(g) < course.periods) {
+                errors.add(g + ": not enough periods of " + course.name);
+                return false;
             }
         }
-        // TODO: is this ever reached?
-        return false;
+        return true;
+
+//        for (Grade g : Grade.values()) {
+//            int gradeCount = 0;
+//            for (Day day : Day.values()) {
+//                GradeDay gd = day.getGradeDay(g);
+//                gradeCount += gd.count(course.code);
+//            }
+//            if (gradeCount < course.periods) {
+//                errors.add(g + ": not enough periods of " + course.name);
+//                return false;
+//            }
+//        }
+//        return true;
     }
 
-    // undo the previously scheduled slot
-    void backTrack() throws Exception {
-        Slot slot = history.pop();
-        slot.grade.clear(slot.period);
-    }
-
-    // schedules one period of c, if possible
-    private boolean scheduleOnePeriod(Course c, Grade g) throws Exception {
-        for (Day day : days) {
-            for (int period = 1; period <= GradeDay.PERIODS_PER_DAY; period++) {
-                GradeDay gd = day.getGradeDay(g);
-                if (gd.get(period) == 0) {
-                    gd.set(period, c.code);
-                    errors.clear();
-                    validateConstraints();
-                    if (errors.isEmpty()) {
-                        Slot slot = new Slot();
-                        slot.day = day;
-                        slot.grade = gd;
-                        slot.period = period;
-                        history.push(slot);
-                        return true;
-                    } else {
-                        gd.clear(period);
-                    }
+    void print() {
+        for (Grade g : Grade.values()) {
+            System.out.printf("%10s", g.name() + " |");
+            for (Day day : Day.values()) {
+                for (Period period : Period.values()) {
+                    System.out.print(day.getGradeDay(g).get(period));
                 }
+                System.out.print("|");
             }
+            System.out.println();
         }
-        return false;
-    }
-
-    // whether c has been fully scheduled for grade
-    private boolean gradeComplete(Course c, Grade g) {
-        int periodsFound = 0;
-        for (Day day : days) {
-            GradeDay gd = day.getGradeDay(g);
-            if (gd.count(c.code) > 0) {
-                periodsFound++;
-            }
-        }
-        return (periodsFound >= c.periods);
     }
 
 }

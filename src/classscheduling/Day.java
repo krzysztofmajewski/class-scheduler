@@ -5,23 +5,33 @@
  */
 package classscheduling;
 
+import static classscheduling.Grade.EIGHT;
+import static classscheduling.Grade.NINE;
+import static classscheduling.Grade.SEVEN;
+
 /**
  *
  * @author krzys
  */
-class Day {    
+public enum Day {
+    
+    MONDAY("Monday"),
+    TUESDAY("Tuesday"),
+    WEDNESDAY("Wednesday"),
+    THURSDAY("Thursday"),
+    FRIDAY("Friday");
+
+    final String name;
     final GradeDay grade7;
     final GradeDay grade8;
     final GradeDay grade9;
     
-    final String name;
-    
-    public Day(String name) {
+    private Day(String name) {
         this.name = name;
         
-        grade7 = new GradeDay("Grade 7");
-        grade8 = new GradeDay("Grade 8");
-        grade9 = new GradeDay("Grade 9");
+        grade7 = new GradeDay(SEVEN, this);
+        grade8 = new GradeDay(EIGHT, this);
+        grade9 = new GradeDay(NINE, this);
     }
     
     public GradeDay getGradeDay(Grade g) {
@@ -37,14 +47,19 @@ class Day {
     
     public int count(char course) {
         int result = 0;
-        for (int period = 1; period <= GradeDay.PERIODS_PER_DAY; period++) {
-            if (grade7.hasCourse(course, period)
-                    || grade8.hasCourse(course, period)
-                    || grade9.hasCourse(course, period)) {
+        for (Period p : Period.values()) {
+            if (grade7.hasCourse(course, p)
+                    || grade8.hasCourse(course, p)
+                    || grade9.hasCourse(course, p)) {
                 result++;
             }
         }
         return result;
+    }
+    
+    @Override
+        public String toString() {
+        return name;
     }
 
 }

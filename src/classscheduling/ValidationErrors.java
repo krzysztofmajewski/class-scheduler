@@ -26,10 +26,14 @@ public class ValidationErrors {
     public boolean isEmpty() {
         return errors.isEmpty();
     }
+    
+    public boolean hasErrors() {
+        return !isEmpty();
+    }
 
     void print() {
         errors.forEach((s) -> {
-            System.err.println(s);
+            System.out.println(s);
         });
     }
 

@@ -5,6 +5,15 @@
  */
 package classscheduling;
 
+import static classscheduling.Course.MATH;
+import static classscheduling.Day.MONDAY;
+import static classscheduling.Grade.EIGHT;
+import static classscheduling.Grade.NINE;
+import static classscheduling.Grade.SEVEN;
+import static classscheduling.Period.FIRST;
+import static classscheduling.Period.SECOND;
+import static classscheduling.Period.FOURTH;
+
 /**
  *
  * @author krzys
@@ -16,92 +25,36 @@ public class ClassScheduling {
      * @throws Exception if something goes wrong
      */
     public static void main(String[] args) throws Exception {
+
         Schedule example = exampleSchedule();
-        Course c = example.todo();
-        while (c != null) {
-            if (!example.scheduleOneSlot(c)) {
-                example.backTrack();
-                System.out.println("pop");
-            } else {
-                Slot top = example.peek();
-                System.out.println(top);
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                System.out.println(example.movesTried + " moves tried");
+                System.out.println(example.history.size() + " moves in history");
+                example.print();
             }
-            c = example.todo();
+        });
+
+        if (example.fillSchedule()) {
+            System.out.println("success!");
+            example.print();
+        } else {
+            System.out.println("failed.");
         }
-//        ValidationErrors errors = example.validate();
-//        errors.print();
+        example.errors.clear();
+        example.validate();
+        // this should not print anything in case of success
+        example.errors.print();
     }
 
     private static Schedule exampleSchedule() throws Exception {
         Schedule schedule = new Schedule();
 
-        // Monday
-        schedule.monday.grade7.set(1, 'M');
-        schedule.monday.grade7.set(2, 'E');
-        schedule.monday.grade7.set(3, 'F');
-
-        schedule.monday.grade8.set(1, 'E');
-        schedule.monday.grade8.set(3, 'F');
-        schedule.monday.grade8.set(4, 'M');
-
-        schedule.monday.grade9.set(2, 'M');
-        schedule.monday.grade9.set(3, 'F');
-        schedule.monday.grade9.set(4, 'E');
-
-        // Tuesday
-        schedule.tuesday.grade7.set(1, 'M');
-        schedule.tuesday.grade7.set(2, 'E');
-        schedule.tuesday.grade7.set(3, 'F');
-
-        schedule.tuesday.grade8.set(1, 'E');
-        schedule.tuesday.grade8.set(3, 'F');
-        schedule.tuesday.grade8.set(4, 'M');
-
-        schedule.tuesday.grade9.set(2, 'M');
-        schedule.tuesday.grade9.set(3, 'F');
-        schedule.tuesday.grade9.set(4, 'E');
-
-        // Wednesday
-        schedule.wednesday.grade7.set(1, 'M');
-        schedule.wednesday.grade7.set(2, 'E');
-        schedule.wednesday.grade7.set(3, 'F');
-        schedule.wednesday.grade7.set(4, 'U');
-
-        schedule.wednesday.grade8.set(1, 'E');
-        schedule.wednesday.grade8.set(2, 'U');
-        schedule.wednesday.grade8.set(3, 'F');
-        schedule.wednesday.grade8.set(4, 'M');
-
-        schedule.wednesday.grade9.set(1, 'U');
-        schedule.wednesday.grade9.set(2, 'M');
-        schedule.wednesday.grade9.set(3, 'F');
-        schedule.wednesday.grade9.set(4, 'E');
-
-        // Thursday
-        schedule.thursday.grade7.set(1, 'M');
-        schedule.thursday.grade7.set(2, 'E');
-        schedule.thursday.grade7.set(3, 'F');
-        schedule.thursday.grade7.set(4, 'U');
-
-        schedule.thursday.grade8.set(1, 'E');
-        schedule.thursday.grade8.set(2, 'U');
-        schedule.thursday.grade8.set(3, 'F');
-        schedule.thursday.grade8.set(4, 'M');
-
-        schedule.thursday.grade9.set(1, 'U');
-        schedule.thursday.grade9.set(2, 'M');
-        schedule.thursday.grade9.set(3, 'F');
-        schedule.thursday.grade9.set(4, 'E');
-
-        // Friday
-        schedule.friday.grade7.set(1, 'U');
-        schedule.friday.grade7.set(3, 'F');
-
-        schedule.friday.grade8.set(2, 'U');
-        schedule.friday.grade8.set(3, 'F');
-
-        schedule.friday.grade9.set(3, 'F');
-        schedule.friday.grade9.set(4, 'U');
+        schedule.set(MONDAY, SEVEN, FIRST, MATH);
+        schedule.set(MONDAY, EIGHT, FOURTH, MATH);
+        schedule.set(MONDAY, NINE, SECOND, MATH);
 
         return schedule;
     }

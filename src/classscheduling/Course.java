@@ -9,63 +9,64 @@ package classscheduling;
  *
  * @author krzys
  */
-public class Course {
+public enum Course {
 
-    String name;
-    char code;
-    int periods;
-    int daysOff = 0;
+    // order matters!    
+    FRENCH("French", 'F', 5, 0),
+    GEOGRAPHY("Geography", 'G', 2, 0),
+    MATH("Math", 'M', 4, 1),
+    ENGLISH("English", 'E', 4, 1),
+    ART("Art", 'A', 2, 2),
+    MUSIC("Music", 'U', 3, 1);
 
-    public static Course Math() {
-        Course m = new Course();
-        m.name = "Math";
-        m.code = 'M';
-        m.periods = 4;
-        m.daysOff = 1;
-        return m;
+    final String name;
+    final char code;
+    final int periods;
+    final int daysOff;
+
+    final private int periodsScheduled[];
+
+    private Course(String name, char code, int periods, int daysOff) {
+        this.name = name;
+        this.code = code;
+        this.periods = periods;
+        this.daysOff = daysOff;
+        periodsScheduled = new int[3];
     }
 
-    public static Course English() {
-        Course e = new Course();
-        e.name = "English";
-        e.code = 'E';
-        e.periods = 4;
-        e.daysOff = 1;
-        return e;
+    public static Course forCode(char c) {
+        switch (c) {
+            case 'M':
+                return MATH;
+            case 'E':
+                return ENGLISH;
+            case 'F':
+                return FRENCH;
+            case 'G':
+                return GEOGRAPHY;
+            case 'A':
+                return ART;
+            case 'U':
+                return MUSIC;
+            default:
+                return null;
+        }
     }
 
-    public static Course French() {
-        Course f = new Course();
-        f.name = "French";
-        f.code = 'F';
-        f.periods = 5;
-        return f;
+    void incrementPeriodsScheduled(Slot slot) {
+        Grade grade = slot.gradeDay.grade;
+        int gradeIndex = grade.ordinal();
+        periodsScheduled[gradeIndex] = periodsScheduled[gradeIndex] + 1;
     }
 
-    public static Course Geography() {
-        Course g = new Course();
-        g.name = "Geography";
-        g.code = 'G';
-        g.periods = 2;
-        return g;
+    void decrementPeriodsScheduled(Slot slot) {
+        Grade grade = slot.gradeDay.grade;
+        int gradeIndex = grade.ordinal();
+        periodsScheduled[gradeIndex] = periodsScheduled[gradeIndex] - 1;
     }
 
-    public static Course Art() {
-        Course a = new Course();
-        a.name = "Art";
-        a.code = 'A';
-        a.periods = 2;
-        a.daysOff = 2;
-        return a;
+    int getPeriodsScheduled(Grade g) {
+        return periodsScheduled[g.ordinal()];
     }
-    
-    public static Course Music() {
-        Course m = new Course();
-        m.name = "Music";
-        m.code = 'U';
-        m.periods = 3;
-        m.daysOff = 1;
-        return m;
-    }    
-    
+
 }

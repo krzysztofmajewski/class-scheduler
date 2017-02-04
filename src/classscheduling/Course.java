@@ -23,31 +23,49 @@ public enum Course {
     final char code;
     final int periods;
     final int daysOff;
-    
+
+    final private int periodsScheduled[];
+
     private Course(String name, char code, int periods, int daysOff) {
         this.name = name;
         this.code = code;
         this.periods = periods;
         this.daysOff = daysOff;
+        periodsScheduled = new int[3];
     }
-    
+
     public static Course forCode(char c) {
-        switch(c) {
-            case 'M' :
+        switch (c) {
+            case 'M':
                 return MATH;
-            case 'E' :
+            case 'E':
                 return ENGLISH;
-            case 'F' :
+            case 'F':
                 return FRENCH;
-            case 'G' :
+            case 'G':
                 return GEOGRAPHY;
-            case 'A' :
+            case 'A':
                 return ART;
-            case 'U' :
+            case 'U':
                 return MUSIC;
-            default :
+            default:
                 return null;
         }
     }
-    
+
+    void incrementPeriodsScheduled(Slot slot) {
+        Grade grade = slot.gradeDay.grade;
+        int index = grade.ordinal();
+        periodsScheduled[index] = periodsScheduled[index] + 1;
+    }
+
+    void decrementPeriodsScheduled(Slot slot) {
+        Grade grade = slot.gradeDay.grade;
+        int index = grade.ordinal();
+        periodsScheduled[index] = periodsScheduled[index] - 1;
+    }
+
+    int getPeriodsScheduled(Grade g) {
+        return periodsScheduled[g.ordinal()];
+    }
 }

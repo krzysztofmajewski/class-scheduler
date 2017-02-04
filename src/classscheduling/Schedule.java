@@ -119,9 +119,12 @@ public class Schedule {
         slot.gradeDay.set(slot.period, course.code);
         freeSlots--;
         history.push(slot);
+        course.incrementPeriodsScheduled(slot);
     }
 
     void clear(Slot slot) throws SanityCheckException {
+        Course course = slot.getCourse();
+        course.decrementPeriodsScheduled(slot);
         slot.gradeDay.clear(slot.period);
         freeSlots++;
         Slot lastFilledSlot = history.pop();
@@ -192,17 +195,25 @@ public class Schedule {
 
     boolean enoughPeriodsPerWeek(Course course) {
         for (Grade g : Grade.values()) {
-            int gradeCount = 0;
-            for (Day day : Day.values()) {
-                GradeDay gd = day.getGradeDay(g);
-                gradeCount += gd.count(course.code);
-            }
-            if (gradeCount < course.periods) {
+            if (course.getPeriodsScheduled(g) < course.periods) {
                 errors.add(g + ": not enough periods of " + course.name);
                 return false;
             }
         }
         return true;
+
+//        for (Grade g : Grade.values()) {
+//            int gradeCount = 0;
+//            for (Day day : Day.values()) {
+//                GradeDay gd = day.getGradeDay(g);
+//                gradeCount += gd.count(course.code);
+//            }
+//            if (gradeCount < course.periods) {
+//                errors.add(g + ": not enough periods of " + course.name);
+//                return false;
+//            }
+//        }
+//        return true;
     }
 
     void print() {

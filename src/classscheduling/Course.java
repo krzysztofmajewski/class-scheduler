@@ -55,17 +55,18 @@ public enum Course {
 
     void incrementPeriodsScheduled(Slot slot) {
         Grade grade = slot.gradeDay.grade;
-        int index = grade.ordinal();
-        periodsScheduled[index] = periodsScheduled[index] + 1;
+        int gradeIndex = grade.ordinal();
+        periodsScheduled[gradeIndex] = periodsScheduled[gradeIndex] + 1;
     }
 
     void decrementPeriodsScheduled(Slot slot) {
         Grade grade = slot.gradeDay.grade;
-        int index = grade.ordinal();
-        periodsScheduled[index] = periodsScheduled[index] - 1;
+        int gradeIndex = grade.ordinal();
+        periodsScheduled[gradeIndex] = periodsScheduled[gradeIndex] - 1;
     }
 
     int getPeriodsScheduled(Grade g) {
         return periodsScheduled[g.ordinal()];
     }
+
 }

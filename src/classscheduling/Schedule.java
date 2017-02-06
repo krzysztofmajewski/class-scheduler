@@ -18,7 +18,7 @@ public class Schedule {
 
     public static final int MILLION = 1000000;
 
-    int movesTried;
+    long movesTried;
     int freeSlots = 60;
 
     final ValidationErrors errors;
@@ -58,7 +58,8 @@ public class Schedule {
         if (freeSlots == 0) {
             errors.clear();
             // TODO: should we validate the whole schedule?
-            validate(lastFilledSlot);
+//            validate(lastFilledSlot);
+            validate();
             if (errors.isEmpty()) {
                 return true;
             }
@@ -201,19 +202,6 @@ public class Schedule {
             }
         }
         return true;
-
-//        for (Grade g : Grade.values()) {
-//            int gradeCount = 0;
-//            for (Day day : Day.values()) {
-//                GradeDay gd = day.getGradeDay(g);
-//                gradeCount += gd.count(course.code);
-//            }
-//            if (gradeCount < course.periods) {
-//                errors.add(g + ": not enough periods of " + course.name);
-//                return false;
-//            }
-//        }
-//        return true;
     }
 
     void print() {

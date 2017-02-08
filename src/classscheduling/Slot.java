@@ -48,4 +48,8 @@ class Slot {
         return Course.forCode(c);
     }
     
+    Grade getGrade() {
+        return gradeDay.grade;
+    }
+    
 }

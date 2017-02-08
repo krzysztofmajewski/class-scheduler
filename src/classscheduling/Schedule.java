@@ -6,6 +6,7 @@
 package classscheduling;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 
@@ -16,6 +17,8 @@ import java.util.Stack;
 // TODO: review throws clauses
 public class Schedule {
 
+    public static final String VERSION = "v2";
+    
     public static final int MILLION = 1000000;
 
     long movesTried;
@@ -34,18 +37,15 @@ public class Schedule {
         history = new Stack<>();
 
         validator = new ScheduleValidator(this);
-    }
 
-    boolean fillSchedule() throws SanityCheckException {
-        return fillSchedule(null, initFreeSlotList());
     }
 
     // TODO make smart decisions based on which constraint failed
-    private boolean fillSchedule(Slot lastFilledSlot, List<Slot> freeSlotList) throws SanityCheckException {
+    boolean fillSchedule(Slot lastFilledSlot, List<Slot> freeSlotList, int coursesFilled) throws SanityCheckException {
         movesTried++;
         // print a status update every once in a while
         if ((movesTried % MILLION) == 1) {
-            System.out.println(freeSlots + " free slots left after "
+            System.out.println("[" + VERSION + "] " + freeSlots + " free slots left after "
                     + movesTried / MILLION + " million moves:");
             print();
             if (freeSlots == 0) {
@@ -71,27 +71,29 @@ public class Schedule {
             // adding more slots won't help us
             return false;
         }
+        if (freeSlotList == null) {
+            freeSlotList = initFreeSlotList();
+        }
         // schedule correct but not complete
         for (Slot slot : freeSlotList) {
-            Course course = null;
-            Course actualCourse = null;
-            if (lastFilledSlot == null) {
-                fillSlotWithNextAvailableCourse(slot);
-            } else {
-                char c = lastFilledSlot.gradeDay.get(lastFilledSlot.period);
-                course = Course.forCode(c);
-                actualCourse = fillSlotWithCourse(slot, course);
-                if (!actualCourse.equals(course)) {
-                    // nop
-                    boolean nop = true;
-                }
+            slot = tryNextFreeSlotForCurrentCourse(lastFilledSlot, slot, coursesFilled);
+            if (slot == null) {
+                // no more courses left, but still slots left
+                // TODO: can this ever happen?
+                return false;
             }
+            // slot not null
             List<Slot> smallerFreeSlotList = new ArrayList<>(freeSlotList);
             boolean ok = smallerFreeSlotList.remove(slot);
             if (!ok) {
                 throw new SanityCheckException(slot + " not found in free slot list");
             }
-            boolean success = fillSchedule(slot, smallerFreeSlotList);
+            int newCoursesFilled = coursesFilled;
+            boolean sameCourse = lastFilledSlot.getCourse().equals(slot.getCourse());
+            if (!sameCourse) {
+                newCoursesFilled++;
+            }
+            boolean success = fillSchedule(slot, smallerFreeSlotList, newCoursesFilled);
             // if the recursive call succeeded, we are done!
             if (success) {
                 return true;
@@ -99,20 +101,20 @@ public class Schedule {
             // no solution from this move, try another slot
             clear(slot);
         }
-        // no empty slot yields a winner
+        // no slot can be filled
         return false;
     }
 
-    void set(Day day, Grade grade, Period period, Course course) throws SanityCheckException {
+    Slot set(Day day, Grade grade, Period period, Course course) throws SanityCheckException {
         GradeDay gd = day.getGradeDay(grade);
         Slot s = new Slot();
         s.day = day;
         s.gradeDay = gd;
         s.period = period;
-        set(s, course);
+        return set(s, course);
     }
 
-    private void set(Slot slot, Course course) throws SanityCheckException {
+    private Slot set(Slot slot, Course course) throws SanityCheckException {
         char c = slot.gradeDay.get(slot.period);
         if (c != 0) {
             throw new SanityCheckException(slot + " already has a course: " + c);
@@ -121,6 +123,7 @@ public class Schedule {
         freeSlots--;
         history.push(slot);
         course.incrementPeriodsScheduled(slot);
+        return slot;
     }
 
     void clear(Slot slot) throws SanityCheckException {
@@ -153,6 +156,12 @@ public class Schedule {
         return result;
     }
 
+    private List<Course> initFreeCourseList() {
+        ArrayList<Course> result = new ArrayList<>();
+        result.addAll(Arrays.asList(Course.values()));
+        return result;
+    }
+
     void validate() {
         validator.validateCorrectnessConstraints();
         validator.validateCompletenessConstraints();
@@ -161,6 +170,20 @@ public class Schedule {
     void validate(Slot lastFilledSlot) throws SanityCheckException {
         validator.validateCorrectnessConstraints(lastFilledSlot);
         validator.validateCompletenessConstraints(lastFilledSlot);
+    }
+
+    private Slot tryNextFreeSlotForCurrentCourse(Slot lastFilledSlot,
+            Slot slotToFill,
+            int coursesFilled) throws SanityCheckException {
+        Course currentCourse = lastFilledSlot.getCourse();
+        if (enoughPeriodsPerWeek(currentCourse)) {
+            coursesFilled++;
+            if (coursesFilled >= Course.values().length) {
+                return null;
+            }
+            currentCourse = Course.values()[coursesFilled];
+        }
+        return set(slotToFill, currentCourse);
     }
 
     Course todo() {

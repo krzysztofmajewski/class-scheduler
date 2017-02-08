@@ -20,6 +20,8 @@ import static classscheduling.Period.FOURTH;
  */
 public class ClassScheduling {
 
+    private static Slot lastFilledSlot;
+
     /**
      * @param args the command line arguments
      * @throws Exception if something goes wrong
@@ -36,8 +38,8 @@ public class ClassScheduling {
                 example.print();
             }
         });
-
-        if (example.fillSchedule()) {
+                
+        if (example.fillSchedule(lastFilledSlot, null, 0)) {
             System.out.println("success!");
             example.print();
         } else {
@@ -54,8 +56,8 @@ public class ClassScheduling {
 
         schedule.set(MONDAY, SEVEN, FIRST, MATH);
         schedule.set(MONDAY, EIGHT, FOURTH, MATH);
-        schedule.set(MONDAY, NINE, SECOND, MATH);
-
+        lastFilledSlot = schedule.set(MONDAY, NINE, SECOND, MATH);
+        
         return schedule;
     }
 

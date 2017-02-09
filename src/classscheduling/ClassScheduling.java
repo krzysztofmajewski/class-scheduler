@@ -34,15 +34,14 @@ public class ClassScheduling {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                System.out.println(example.movesTried / MILLION + " million moves tried");
-                System.out.println(example.history.size() + " moves in history");
+                System.out.println(example.movesTried / MILLION + " million legal moves tried");
                 example.print();
             }
         });
                 
         if (example.fillSchedule(lastFilledSlot, null, 0)) {
             System.out.println("success!");
-            example.print();
+//            example.print();
         } else {
             System.out.println("failed.");
         }

@@ -88,23 +88,25 @@ public class ScheduleValidator {
 //    }
 
     private boolean enoughPeriodsPerWeek() {
+        boolean result = true;
         for (Course course : Course.values()) {
             boolean ok = enoughPeriodsPerWeek(course);
             if (!ok) {
-                return false;
+                result = false;
             }
         }
-        return true;
+        return result;
     }
 
     private boolean enoughPeriodsPerWeek(Course course) {
+        boolean result = true;
         for (Grade g : Grade.values()) {
             if (course.getPeriodsScheduled(g) < course.periods) {
                 errors.add(g + ": not enough periods of " + course.name);
-                return false;
+                result = false;
             }
         }
-        return true;
+        return result;
     }
     
 //    private boolean enoughPeriodsPerWeek(Slot slot) {

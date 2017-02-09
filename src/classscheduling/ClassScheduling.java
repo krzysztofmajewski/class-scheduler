@@ -13,6 +13,7 @@ import static classscheduling.Grade.SEVEN;
 import static classscheduling.Period.FIRST;
 import static classscheduling.Period.SECOND;
 import static classscheduling.Period.FOURTH;
+import static classscheduling.Schedule.MILLION;
 
 /**
  *
@@ -33,7 +34,7 @@ public class ClassScheduling {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                System.out.println(example.movesTried + " moves tried");
+                System.out.println(example.movesTried / MILLION + " million moves tried");
                 System.out.println(example.history.size() + " moves in history");
                 example.print();
             }
@@ -45,10 +46,9 @@ public class ClassScheduling {
         } else {
             System.out.println("failed.");
         }
-        example.errors.clear();
-        example.validate();
+        example.validator.validate();
         // this should not print anything in case of success
-        example.errors.print();
+        example.validator.printErrors();
     }
 
     private static Schedule exampleSchedule() throws Exception {

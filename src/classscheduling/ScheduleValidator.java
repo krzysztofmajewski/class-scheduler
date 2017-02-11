@@ -7,6 +7,7 @@ package classscheduling;
 
 import static classscheduling.Course.FRENCH;
 import static classscheduling.Course.GEOGRAPHY;
+
 /**
  *
  * @author krzys
@@ -16,7 +17,7 @@ public class ScheduleValidator {
     private final Schedule schedule;
     
     private final ValidationErrors errors;
-
+    
     public ScheduleValidator(Schedule schedule) {
         this.schedule = schedule;
         errors = new ValidationErrors();

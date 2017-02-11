@@ -53,8 +53,8 @@ public class ClassScheduling {
     private static Schedule exampleSchedule() throws Exception {
         Schedule schedule = new Schedule();
 
-        schedule.set(MONDAY, SEVEN, FIRST, MATH);
-        schedule.set(MONDAY, EIGHT, FOURTH, MATH);
+//        schedule.set(MONDAY, SEVEN, FIRST, MATH);
+//        schedule.set(MONDAY, EIGHT, FOURTH, MATH);
         lastFilledSlot = schedule.set(MONDAY, NINE, SECOND, MATH);
         
         return schedule;

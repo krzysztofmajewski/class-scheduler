@@ -13,12 +13,15 @@ import static classscheduling.Grade.SEVEN;
 import static classscheduling.Period.FIRST;
 import static classscheduling.Period.SECOND;
 import static classscheduling.Period.FOURTH;
+import static classscheduling.Schedule.MILLION;
 
 /**
  *
  * @author krzys
  */
 public class ClassScheduling {
+
+    private static Slot lastFilledSlot;
 
     /**
      * @param args the command line arguments
@@ -31,31 +34,29 @@ public class ClassScheduling {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                System.out.println(example.movesTried + " moves tried");
-                System.out.println(example.history.size() + " moves in history");
+                System.out.println(example.movesTried / MILLION + " million legal moves tried");
                 example.print();
             }
         });
-
-        if (example.fillSchedule()) {
+                
+        if (example.fillSchedule(lastFilledSlot, null, 0)) {
             System.out.println("success!");
-            example.print();
+//            example.print();
         } else {
             System.out.println("failed.");
         }
-        example.errors.clear();
-        example.validate();
+        example.validator.validate();
         // this should not print anything in case of success
-        example.errors.print();
+        example.validator.printErrors();
     }
 
     private static Schedule exampleSchedule() throws Exception {
         Schedule schedule = new Schedule();
 
-        schedule.set(MONDAY, SEVEN, FIRST, MATH);
-        schedule.set(MONDAY, EIGHT, FOURTH, MATH);
-        schedule.set(MONDAY, NINE, SECOND, MATH);
-
+//        schedule.set(MONDAY, SEVEN, FIRST, MATH);
+//        schedule.set(MONDAY, EIGHT, FOURTH, MATH);
+        lastFilledSlot = schedule.set(MONDAY, NINE, SECOND, MATH);
+        
         return schedule;
     }
 

@@ -39,7 +39,7 @@ public class ClassScheduling {
             }
         });
                 
-        if (example.fillSchedule(lastFilledSlot, null, 0)) {
+        if (example.fillSchedule(lastFilledSlot, null)) {
             System.out.println("success!");
 //            example.print();
         } else {

@@ -15,9 +15,9 @@ public enum Course {
     MATH("Math", 'M', 4, 1),
     FRENCH("French", 'F', 5, 0),
     GEOGRAPHY("Geography", 'G', 2, 0),
-    ENGLISH("English", 'E', 4, 1),
     ART("Art", 'A', 2, 2),
-    MUSIC("Music", 'U', 3, 1);
+    ENGLISH("English", 'E', 4, 1);
+//    MUSIC("Music", 'U', 3, 1);
 
     final String name;
     final char code;
@@ -46,8 +46,8 @@ public enum Course {
                 return GEOGRAPHY;
             case 'A':
                 return ART;
-            case 'U':
-                return MUSIC;
+//            case 'U':
+//                return MUSIC;
             default:
                 return null;
         }

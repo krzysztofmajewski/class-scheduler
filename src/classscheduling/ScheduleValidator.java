@@ -15,9 +15,9 @@ import static classscheduling.Course.GEOGRAPHY;
 public class ScheduleValidator {
 
     private final Schedule schedule;
-    
+
     private final ValidationErrors errors;
-    
+
     public ScheduleValidator(Schedule schedule) {
         this.schedule = schedule;
         errors = new ValidationErrors();
@@ -26,7 +26,7 @@ public class ScheduleValidator {
     void reset() {
         errors.clear();
     }
-    
+
     void printErrors() {
         errors.print();
     }
@@ -34,11 +34,11 @@ public class ScheduleValidator {
     boolean hasNoErrors() {
         return errors.isEmpty();
     }
- 
+
     boolean hasErrors() {
         return !errors.isEmpty();
     }
-    
+
     void validate() {
         reset();
         validateCorrectnessConstraints();
@@ -54,7 +54,8 @@ public class ScheduleValidator {
             }
             return true;
         }
-        boolean result = noCourseTwicePerDay(slot)
+        boolean result = frenchConferenceClassComplete(slot)
+                && noCourseTwicePerDay(slot)
                 && teacherHasAtMostThreePeriodsPerDay(slot)
                 && conflictsWithConference(slot)
                 && notTooManyPeriodsPerWeek(slot)
@@ -62,12 +63,11 @@ public class ScheduleValidator {
                 && teacherOneSlotAtATime(slot);
         return result;
     }
-    
+
 //    private void validate(Slot lastFilledSlot) throws SanityCheckException {
 //        validateCorrectnessConstraints(lastFilledSlot);
 //        validateCompletenessConstraints(lastFilledSlot);
 //    }
-    
     private void validateCorrectnessConstraints() {
         noCourseTwicePerDay();
         teacherHasAtMostThreePeriodsPerDay();
@@ -87,7 +87,6 @@ public class ScheduleValidator {
 //        frenchConferenceClassComplete(slot);
 //        enoughPeriodsPerWeek(slot);
 //    }
-
     private boolean enoughPeriodsPerWeek() {
         boolean result = true;
         for (Course course : Course.values()) {
@@ -109,13 +108,12 @@ public class ScheduleValidator {
         }
         return result;
     }
-    
+
 //    private boolean enoughPeriodsPerWeek(Slot slot) {
 //        char c = slot.gradeDay.get(slot.period);
 //        Course course = Course.forCode(c);
 //        return enoughPeriodsPerWeek(course);
 //    }
-
     private boolean notTooManyPeriodsPerWeek() {
         for (Course course : Course.values()) {
             for (Grade g : Grade.values()) {
@@ -220,10 +218,10 @@ public class ScheduleValidator {
         }
         return true;
     }
-
-//    private boolean frenchConferenceClassComplete(Slot slot) {
-//        return frenchConferenceClassComplete(slot.day, slot.period);
-//    }
+    
+    private boolean frenchConferenceClassComplete(Slot slot) {
+        return frenchConferenceClassComplete(slot.day, slot.period);
+    }
 
     private boolean frenchConferenceClassComplete(Day day, Period period) {
         if (allGradesHaveFrench(day, period) || noGradesHaveFrench(day, period)) {

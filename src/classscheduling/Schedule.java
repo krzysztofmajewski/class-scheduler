@@ -57,7 +57,13 @@ public class Schedule {
                 continue;
             }
             // valid move
-            printProgress();
+            printProgress(slot, slot.getCourse(), iterator);
+            if (iterator.takingTooLong()) {
+                iterator.retreat(slot);
+                continue;
+            }
+            // make a copy of the iterator, run recursive call with that
+            // this way we discard the bad moves when we backtrack
             boolean hasSolution = scheduleCourses(new MovesIterator(iterator));
             if (hasSolution) {
                 return true;
@@ -126,9 +132,10 @@ public class Schedule {
         return slot;
     }
 
-    private void printProgress() {
+    private void printProgress(Slot slot, Course course, MovesIterator iterator) {
         movesTried++;
         // print a status update every once in a while
+        int THOUSAND = MILLION / 1000;
         if ((movesTried % MILLION) == 1) {
             System.out.println("[" + VERSION + "] " + freeSlots + " free slots left after "
                     + movesTried / MILLION + " million legal moves:");
@@ -136,6 +143,9 @@ public class Schedule {
             validator.reset();
             validator.validate();
             validator.printErrors();
+            System.out.println(iterator.repeatedBadMoves + " known bad moves made on this solution path (" 
+            + iterator.totalMoves + " total)");
+            System.out.println(slot);
         }
     }
 

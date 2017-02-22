@@ -7,12 +7,8 @@ package classscheduling;
 
 import static classscheduling.Course.MATH;
 import static classscheduling.Day.MONDAY;
-import static classscheduling.Grade.EIGHT;
 import static classscheduling.Grade.NINE;
-import static classscheduling.Grade.SEVEN;
-import static classscheduling.Period.FIRST;
 import static classscheduling.Period.SECOND;
-import static classscheduling.Period.FOURTH;
 import static classscheduling.Schedule.MILLION;
 
 /**
@@ -20,8 +16,6 @@ import static classscheduling.Schedule.MILLION;
  * @author krzys
  */
 public class ClassScheduling {
-
-    private static Slot lastFilledSlot;
 
     /**
      * @param args the command line arguments
@@ -38,10 +32,9 @@ public class ClassScheduling {
                 example.print();
             }
         });
-                
-        if (example.fillSchedule(lastFilledSlot, null)) {
+        MovesIterator iterator = new MovesIterator(example, Course.MATH);
+        if (example.scheduleCourses(iterator)) {
             System.out.println("success!");
-//            example.print();
         } else {
             System.out.println("failed.");
         }
@@ -55,8 +48,8 @@ public class ClassScheduling {
 
 //        schedule.set(MONDAY, SEVEN, FIRST, MATH);
 //        schedule.set(MONDAY, EIGHT, FOURTH, MATH);
-        lastFilledSlot = schedule.set(MONDAY, NINE, SECOND, MATH);
-        
+        schedule.set(MONDAY, NINE, SECOND, MATH);
+
         return schedule;
     }
 

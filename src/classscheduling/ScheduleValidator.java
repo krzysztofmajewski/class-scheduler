@@ -54,8 +54,7 @@ public class ScheduleValidator {
             }
             return true;
         }
-        boolean result = frenchConferenceClassComplete(slot)
-                && noCourseTwicePerDay(slot)
+        boolean result = noCourseTwicePerDay(slot)
                 && teacherHasAtMostThreePeriodsPerDay(slot)
                 && conflictsWithConference(slot)
                 && notTooManyPeriodsPerWeek(slot)
@@ -217,10 +216,6 @@ public class ScheduleValidator {
             }
         }
         return true;
-    }
-    
-    private boolean frenchConferenceClassComplete(Slot slot) {
-        return frenchConferenceClassComplete(slot.day, slot.period);
     }
 
     private boolean frenchConferenceClassComplete(Day day, Period period) {

@@ -5,7 +5,11 @@
  */
 package classscheduling;
 
+import static classscheduling.YesNoMaybe.MAYBE;
+import static classscheduling.YesNoMaybe.NO;
+import static classscheduling.YesNoMaybe.YES;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -16,15 +20,19 @@ public class Schedule {
 
     public static final String VERSION = "v4";
 
-    public static final int MILLION = 1000000;
+    public static final int MILLION = 1000 * 1000;
 
-    long movesTried;
+    final List<Slot> freeSlotList;
+
+    long legalMovesTried;
     int freeSlots = 60;
+    int largestNumberOfFreeSlotsWhenBacktracking = 0;
 
     final ScheduleValidator validator;
 
     public Schedule() {
         validator = new ScheduleValidator(this);
+        freeSlotList = initFreeSlotList();
     }
 
     void print() {
@@ -32,7 +40,11 @@ public class Schedule {
             System.out.printf("%10s", g.name() + " |");
             for (Day day : Day.values()) {
                 for (Period period : Period.values()) {
-                    System.out.print(day.getGradeDay(g).get(period));
+                    char c = day.getGradeDay(g).get(period);
+                    if (c == 0) {
+                        c = '?';
+                    }
+                    System.out.print(c);
                 }
                 System.out.print("|");
             }
@@ -41,11 +53,8 @@ public class Schedule {
     }
 
     // returns true if it finds a solution
-    boolean scheduleCourses(MovesIterator iterator) throws SanityCheckException {
-        // suppose there exists a valid solution S which schedules course C in configuration K
-        //   then it should not matter if C is the first course to be scheduled, or the second, or third, etc.
-        //   but this is only true if we can iterate over all configurations of a given course
-        // returns a slot filled with a course that has not yet been tried in that slot
+    YesNoMaybe scheduleCourses(MovesIterator iterator) throws SanityCheckException {
+        boolean foundMoveThatTookTooLong = false;
         while (iterator.notDone()) {
             Slot slot = (Slot) iterator.move();
             // check for correctness of current schedule
@@ -57,23 +66,62 @@ public class Schedule {
                 continue;
             }
             // valid move
-            printProgress(slot, slot.getCourse(), iterator);
+            if (enoughPeriodsPerWeek(iterator.currentCourse)) {
+                iterator.selectNextCourse();
+            }
+            legalMovesTried++;
+            MovesIterator subproblemIterator = new MovesIterator(iterator);
+            YesNoMaybe hasSolution = scheduleCourses(subproblemIterator);
+            long x = iterator.movesTriedInThisMillion + subproblemIterator.movesTriedInThisMillion;
+            long y = 0;
+            if (x > MILLION) {
+                y++;
+                x -= MILLION;
+            }
+            iterator.millionsOfMovesTried += subproblemIterator.millionsOfMovesTried + y;
+            iterator.movesTriedInThisMillion = x;
             if (iterator.takingTooLong()) {
                 iterator.retreat(slot);
-                continue;
+                return MAYBE;
             }
-            // make a copy of the iterator, run recursive call with that
-            // this way we discard the bad moves when we backtrack
-            boolean hasSolution = scheduleCourses(new MovesIterator(iterator));
-            if (hasSolution) {
-                return true;
+            switch (hasSolution) {
+                case YES:
+                    return YES;
+                case MAYBE:
+                    foundMoveThatTookTooLong = true;
+                    iterator.retreat(slot);
+                    continue;
+                case NO:
+                    boolean printRetreatInfo = false;
+                    if (freeSlots > largestNumberOfFreeSlotsWhenBacktracking) {
+                        largestNumberOfFreeSlotsWhenBacktracking = freeSlots;
+                        System.out.println("\nRetreating from: " + slot);
+                        printRetreatInfo = true;
+                    }
+                    iterator.retreat(slot);
+                    if (printRetreatInfo) {
+                        System.out.println("Retreated, " + freeSlots + " free slots");
+                        print();
+                        if (subproblemIterator.millionsOfMovesTried > 0) {
+                            System.out.print(subproblemIterator.millionsOfMovesTried + " million");
+                        }
+                        if (subproblemIterator.movesTriedInThisMillion > 0) {
+                            System.out.print(" " + subproblemIterator.movesTriedInThisMillion);
+                        }
+                        System.out.println(" legal and illegal moves attempted in this subproblem");
+                        System.out.println("Next move will try to schedule course: " + iterator.currentCourse);
+                    }
             }
-            // no solution from this configuration
-            // roll back
-            iterator.retreat(slot);
         }
+        validator.reset();
         validator.validate();
-        return validator.hasNoErrors();
+        if (validator.hasErrors()) {
+            if (foundMoveThatTookTooLong) {
+                return MAYBE;
+            }
+            return NO;
+        }
+        return YES;
     }
 
     boolean enoughPeriodsPerWeek(Course course
@@ -96,10 +144,10 @@ public class Schedule {
         return set(s, course);
     }
 
-    ArrayList<Slot> initFreeSlotList() {
+    private ArrayList<Slot> initFreeSlotList() {
         ArrayList<Slot> result = new ArrayList<>();
-        for (Day day : Day.values()) {
-            for (Grade g : Grade.values()) {
+        for (Grade g : Grade.values()) {
+            for (Day day : Day.values()) {
                 for (Period p : Period.values()) {
                     if (day.getGradeDay(g).get(p) == 0) {
                         Slot slot = new Slot();
@@ -119,6 +167,10 @@ public class Schedule {
         course.decrementPeriodsScheduled(slot);
         slot.gradeDay.clear(slot.period);
         freeSlots++;
+        if (freeSlotList.contains(slot)) {
+            throw new SanityCheckException(slot + " should not be in free slot list");
+        }
+        freeSlotList.add(slot);
     }
 
     Slot set(Slot slot, Course course) throws SanityCheckException {
@@ -128,25 +180,26 @@ public class Schedule {
         }
         slot.gradeDay.set(slot.period, course.code);
         freeSlots--;
+        if (!freeSlotList.remove(slot)) {
+            throw new SanityCheckException(slot + " not found in free slot list");
+        }
         course.incrementPeriodsScheduled(slot);
         return slot;
     }
 
     private void printProgress(Slot slot, Course course, MovesIterator iterator) {
-        movesTried++;
         // print a status update every once in a while
-        int THOUSAND = MILLION / 1000;
-        if ((movesTried % MILLION) == 1) {
-            System.out.println("[" + VERSION + "] " + freeSlots + " free slots left after "
-                    + movesTried / MILLION + " million legal moves:");
-            print();
-            validator.reset();
-            validator.validate();
-            validator.printErrors();
-            System.out.println(iterator.repeatedBadMoves + " known bad moves made on this solution path (" 
-            + iterator.totalMoves + " total)");
-            System.out.println(slot);
-        }
+//        if ((movesTried % MILLION) == 1) {
+        System.out.println("[" + VERSION + "] " + freeSlots + " free slots left after "
+                + legalMovesTried + " legal moves:");
+        print();
+//            validator.reset();
+//            validator.validate();
+//            validator.printErrors();
+//            System.out.println(iterator.repeatedBadMoves + " known bad moves made on this solution path (" 
+//            + iterator.totalMoves + " total)");
+        System.out.println(slot);
+//    }
     }
 
 }

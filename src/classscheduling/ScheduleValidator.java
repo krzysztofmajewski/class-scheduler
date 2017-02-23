@@ -49,7 +49,7 @@ public class ScheduleValidator {
     boolean validateCorrectnessConstraints(Slot slot) throws SanityCheckException {
         if (slot == null) {
             // this should only happen if we just started
-            if (schedule.movesTried != 1) {
+            if (schedule.legalMovesTried != 1) {
                 throw new SanityCheckException("slot should not be null");
             }
             return true;

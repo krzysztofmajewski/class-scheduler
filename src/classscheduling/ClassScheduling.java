@@ -28,15 +28,21 @@ public class ClassScheduling {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                System.out.println(example.movesTried / MILLION + " million legal moves tried");
+                System.out.println(example.legalMovesTried + " legal moves tried");
                 example.print();
             }
         });
         MovesIterator iterator = new MovesIterator(example, Course.MATH);
-        if (example.scheduleCourses(iterator)) {
-            System.out.println("success!");
-        } else {
-            System.out.println("failed.");
+        YesNoMaybe result = example.scheduleCourses(iterator);
+        switch (result) {
+            case YES:
+                System.out.println("Success!");
+                break;
+            case NO:
+                System.out.println("Failed.");
+                break;
+            default:
+                System.out.println("Search did not complete in time.");
         }
         example.validator.validate();
         // this should not print anything in case of success

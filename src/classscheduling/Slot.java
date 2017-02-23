@@ -19,7 +19,7 @@ class Slot {
     
     @Override
     public String toString() {
-        return "Slot: " + day.name + ", " + gradeDay.grade.name() + ", " + period + ", " + gradeDay.get(period);
+        return day.name + ", " + gradeDay.grade.name() + ", " + period + ", " + gradeDay.get(period);
     }
     
     @Override

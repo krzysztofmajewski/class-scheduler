@@ -24,7 +24,6 @@ public class Schedule {
 
     final List<Slot> freeSlotList;
 
-    long legalMovesTried;
     int freeSlots = 60;
     int largestNumberOfFreeSlotsWhenBacktracking = 0;
 
@@ -69,48 +68,71 @@ public class Schedule {
             if (enoughPeriodsPerWeek(iterator.currentCourse)) {
                 iterator.selectNextCourse();
             }
-            legalMovesTried++;
             MovesIterator subproblemIterator = new MovesIterator(iterator);
             YesNoMaybe hasSolution = scheduleCourses(subproblemIterator);
-            switch (hasSolution) {
-                case YES:
-                    updateMovesTried(iterator, subproblemIterator);
-                    return YES;
-                case MAYBE:
-                    return MAYBE;
-                case NO:
-                    updateMovesTried(iterator, subproblemIterator);
-                    boolean printRetreatInfo = false;
-                    if (freeSlots > largestNumberOfFreeSlotsWhenBacktracking) {
-                        largestNumberOfFreeSlotsWhenBacktracking = freeSlots;
-                        System.out.println("\nRetreating from: " + slot);
-                        printRetreatInfo = true;
-                    }
-                    iterator.retreat(slot);
-                    if (printRetreatInfo) {
-                        System.out.println("Retreated, " + freeSlots + " free slots");
-                        print();
-                        if (subproblemIterator.millionsOfMovesTried > 0) {
-                            System.out.print(subproblemIterator.millionsOfMovesTried + " million");
-                        }
-                        if (subproblemIterator.movesTriedInThisMillion > 0) {
-                            System.out.print(" " + subproblemIterator.movesTriedInThisMillion);
-                        }
-                        System.out.println(" legal and illegal moves attempted in this subproblem");
-                        System.out.println("Next move will try to schedule course: " + iterator.currentCourse);
-                    }
+            processResult(hasSolution, iterator, subproblemIterator, slot);
+            if (hasSolution.equals(YES)) {
+                return YES;
             }
         }
-        if (iterator.tookTooLong()) {
+        if (iterator.totalMovesFromMaybes > 0) {
+            // now we can add these guys back
+            iterator.totalMovesTried += iterator.totalMovesFromMaybes;
+        }
+        if (iterator.takingTooLong()) {
+            // this iterator has searched too many moves
             return MAYBE;
         }
+        // this iterator searched all of its candidates moves
+        // none of them returned MAYBE
         // iterator tried all its moves
-        validator.reset();
+        if (freeSlots > 0) {
+            if (Course.values().length == 5) {
+                return NO;
+            }
+        }
+        // no free slots left, or else we are in test mode
         validator.validate();
         if (validator.hasErrors()) {
             return NO;
         }
         return YES;
+    }
+
+    void processResult(YesNoMaybe hasSolution, MovesIterator iterator, MovesIterator subproblemIterator, Slot slot) throws SanityCheckException {
+        switch (hasSolution) {
+            case YES:
+                iterator.totalMovesTried += subproblemIterator.totalMovesTried;
+                break;
+            case MAYBE:
+                // do not add these to our moves count yet
+                // we want to continue trying the rest of our candidate moves
+                iterator.totalMovesFromMaybes += subproblemIterator.totalMovesTried;
+                iterator.retreat(slot);
+                break;
+            case NO:
+                iterator.totalMovesTried += subproblemIterator.totalMovesTried;
+                boolean printRetreatInfo = false;
+                if (freeSlots > largestNumberOfFreeSlotsWhenBacktracking) {
+                    largestNumberOfFreeSlotsWhenBacktracking = freeSlots;
+                    System.out.println("\nRetreating from: " + slot);
+                    printRetreatInfo = true;
+                }
+                iterator.retreat(slot);
+                if (printRetreatInfo) {
+                    System.out.println("Retreated from hopeless move, " + freeSlots + " free slots");
+                    print();
+                    System.out.println(subproblemIterator.totalMovesTried
+                            + " legal and illegal moves exhaustively searched in this subproblem");
+                    System.out.println(iterator.totalMovesTried
+                            + " legal and illegal moved exhaustively searched in this bounded game");
+                    if (iterator.currentCourse == null) {
+                        System.out.println("This iterator has attempted all of its moves");
+                    } else {
+                        System.out.println("Next move for this iterator will try to schedule course: " + iterator.currentCourse);
+                    }
+                }
+        }
     }
 
     boolean enoughPeriodsPerWeek(Course course
@@ -191,19 +213,4 @@ public class Schedule {
 //        System.out.println(slot);
 ////    }
 //    }
-    private void updateMovesTried(MovesIterator iterator, MovesIterator subproblemIterator) {
-        long x = iterator.movesTriedInThisMillion + subproblemIterator.movesTriedInThisMillion;
-        long y = 0;
-        // assume if x < MILLION and y < MILLION, then (x+y-MILLION) < MILLION
-        // proof: x+y < 2*MILLION
-        //    --> x+y-MILLION < 2*MILLION - MILLION
-        //    --> x+y-MILLION < MILLION
-        if (x > MILLION) {
-            y++;
-            x -= MILLION;
-        }
-        iterator.millionsOfMovesTried += subproblemIterator.millionsOfMovesTried + y;
-        iterator.movesTriedInThisMillion = x;
-    }
-
 }

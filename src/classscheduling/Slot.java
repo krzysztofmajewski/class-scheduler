@@ -31,14 +31,14 @@ class Slot {
         return false;
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 53 * hash + Objects.hashCode(this.day);
-        hash = 53 * hash + Objects.hashCode(this.gradeDay);
-        hash = 53 * hash + Objects.hashCode(this.period);
-        return hash;
-    }
+//    @Override
+//    public int hashCode() {
+//        int hash = 7;
+//        hash = 53 * hash + Objects.hashCode(this.day);
+//        hash = 53 * hash + Objects.hashCode(this.gradeDay);
+//        hash = 53 * hash + Objects.hashCode(this.period);
+//        return hash;
+//    }
     
     Course getCourse() {
         char c = gradeDay.get(period);

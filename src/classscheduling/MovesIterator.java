@@ -7,9 +7,7 @@ package classscheduling;
 
 import static classscheduling.Schedule.MILLION;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
 /**
  *
@@ -17,13 +15,12 @@ import java.util.Random;
  */
 public class MovesIterator {
 
-    static long VOLUME_THRESHOLD = MILLION;
+    static long VOLUME_THRESHOLD = 1000; //MILLION;
     private final Schedule schedule;
 
-    private final HashMap<Slot, List<Course>> badMoves;
-
-    long millionsOfMovesTried;
-    long movesTriedInThisMillion;
+    long totalMovesTried;
+    
+    long totalMovesFromMaybes;
 
     private final List<Slot> remainingSlots;
 
@@ -33,22 +30,14 @@ public class MovesIterator {
 
     Course currentCourse;
 
-    private final Random randomGenerator;
-
     public MovesIterator(Schedule schedule, Course currentCourse) {
         this.schedule = schedule;
-        badMoves = new HashMap<>();
         remainingSlots = new ArrayList<>();
         for (Slot slot : schedule.freeSlotList) {
             remainingSlots.add(slot);
         }
-        for (Slot slot : remainingSlots) {
-            List<Course> badMovesForThisSlot = new ArrayList<>();
-            badMoves.put(slot, badMovesForThisSlot);
-        }
         this.currentCourse = currentCourse;
         nextSlotToTry = remainingSlots.get(0);
-        randomGenerator = new Random();
         remainingCourses = new ArrayList<>();
         for (Course course : Course.values()) {
             if (schedule.enoughPeriodsPerWeek(course)) {
@@ -60,22 +49,12 @@ public class MovesIterator {
 
     public MovesIterator(MovesIterator other) {
         schedule = other.schedule;
-        badMoves = new HashMap<>();
         remainingSlots = new ArrayList<>();
         for (Slot slot : schedule.freeSlotList) {
             remainingSlots.add(slot);
         }
-        for (Slot slot : remainingSlots) {
-            if (other.badMoves.containsKey(slot)) {
-                badMoves.put(slot, new ArrayList<>(other.badMoves.get(slot)));
-            }
-        }
         currentCourse = other.currentCourse;
         nextSlotToTry = other.nextSlotToTry;
-        randomGenerator = new Random();
-//        totalMovesForThisCourse = other.totalMovesForThisCourse;
-//        millionsOfMovesTried = other.millionsOfMovesTried;
-//        movesTriedInThisMillion = other.movesTriedInThisMillion;
         remainingCourses = new ArrayList<>();
         for (Course course : other.remainingCourses) {
             remainingCourses.add(course);
@@ -83,22 +62,16 @@ public class MovesIterator {
     }
 
     boolean notDone() {
-        return nextSlotToTry != null && currentCourse != null && !tookTooLong();
+        return nextSlotToTry != null && currentCourse != null && !takingTooLong();
     }
 
-    boolean tookTooLong() {
-        long totalMovesTried = movesTriedInThisMillion + MILLION * millionsOfMovesTried;
+    boolean takingTooLong() {
         return totalMovesTried >= VOLUME_THRESHOLD;
     }
-    
+
     // returns a slot filled with a course that has not yet been tried in that slot
     Slot move() throws SanityCheckException {
-        if (movesTriedInThisMillion < MILLION) {
-            movesTriedInThisMillion++;
-        } else {
-            movesTriedInThisMillion = 0;
-            millionsOfMovesTried++;
-        }
+        totalMovesTried++;
         Slot result = nextSlotToTry;
         schedule.set(result, currentCourse);
         if (!remainingSlots.remove((Slot) result)) {
@@ -109,24 +82,8 @@ public class MovesIterator {
     }
 
     void retreat(Slot slot) throws SanityCheckException {
-//        List<Course> badMovesForThisSlot = badMoves.get(slot);
-//        Course course = slot.getCourse();
-//        if (badMovesForThisSlot.contains(course)) {
-//            throw new SanityCheckException("Course " + course + " already tried for slot " + slot);
-//        }
-//        badMovesForThisSlot.add(course);
-//        if (badMovesForThisSlot.size() == Course.values().length) {
-//            freeSlotList.remove(slot);
-//        }
         schedule.clear(slot);
     }
-
-//    boolean takingTooLong() {
-////                return (millionsOfMovesTried > 186);
-////        return (millionsOfMovesTried > 1);
-////        return (millionsOfMovesTried > 1); // && (movesTriedInThisMillion > 1000);
-//        return movesTriedInThisMillion > 10;
-//    }
 
     void selectNextCourse() throws SanityCheckException {
         for (Slot slot : schedule.freeSlotList) {
@@ -147,33 +104,8 @@ public class MovesIterator {
         }
         currentCourse = remainingCourses.get(0);
     }
-    //        int index = randomGenerator.nextInt(courses.size());
-    //        currentCourse = courses.get(index);
-    //        totalMovesForThisCourse = 0;
-    //        System.out.println("switched to course: " + currentCourse);
-    //    }
-    //
-    //        for (Course course : Course.values()) {
-    //            if (course.equals(currentCourse)) {
-    //                continue;
-    //            }
-    //            if (schedule.enoughPeriodsPerWeek(course)) {
-    //                continue;
-    //            }
-    //            currentCourse = course;
-    //            totalMovesForThisCourse = 0;
-    //            return;
-    //        }
-    //        currentCourse = null;
-    //    }
 
     private Slot prepareNextMove() throws SanityCheckException {
-//        else {
-//            totalMovesForThisCourse++;
-//            if (totalMovesForThisCourse > 30) {
-//                selectNextCourse();
-//            }
-//        }
         if (currentCourse == null) {
             return null;
         }
@@ -182,46 +114,6 @@ public class MovesIterator {
         }
         return remainingSlots.get(0);
     }
-//        int index = randomGenerator.nextInt(freeSlotList.size());
-//        result = freeSlotList.get(index);
-//        if (isKnownBadMove(result, currentCourse)) {
-//            repeatedBadMoves++;
-//        }
-//        return freeSlotList.get(index);
-//    }
-//
-//        ArrayList<Slot> remainingSlots = new ArrayList<>(freeSlotList);
-//        while (!remainingSlots.isEmpty()) {
-//            int index = randomGenerator.nextInt(remainingSlots.size());
-//            Slot slot = remainingSlots.get(index);
-//            List<Course> movesTriedForThisSlot = badMoves.get(slot);
-//            if (movesTriedForThisSlot.contains(currentCourse)) {
-//                remainingSlots.remove(slot);
-//                continue;
-//            }
-//            result = slot;
-//            break;
-//        }
-//        for (Slot slot : freeSlotList) {
-//            List<Course> movesTriedForThisSlot = badMoves.get(slot);
-//            if (movesTriedForThisSlot.contains(currentCourse)) {
-//                continue;
-//            }
-//            result = slot;
-//            break;
-//        }
-//        return result;
-//    }
-
-//    private boolean isKnownBadMove(Slot slot, Course course) {
-//        List<Course> badMovesForThisSlot = badMoves.get(slot);
-//        return badMovesForThisSlot.contains(course);
-//    }
-
-//    boolean heads() {
-//        int zeroOrOne = randomGenerator.nextInt(2);
-//        return (zeroOrOne > 0);
-//    }
 
     static void increaseThreshold() {
         VOLUME_THRESHOLD *= 2;

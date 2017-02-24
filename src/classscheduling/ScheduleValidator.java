@@ -14,10 +14,12 @@ import static classscheduling.Course.GEOGRAPHY;
  */
 public class ScheduleValidator {
 
+    private static final int FIVE = Day.values().length;
+            
     private final Schedule schedule;
 
     private final ValidationErrors errors;
-
+    
     public ScheduleValidator(Schedule schedule) {
         this.schedule = schedule;
         errors = new ValidationErrors();
@@ -49,9 +51,9 @@ public class ScheduleValidator {
     boolean validateCorrectnessConstraints(Slot slot) throws SanityCheckException {
         if (slot == null) {
             // this should only happen if we just started
-            if (schedule.legalMovesTried != 1) {
-                throw new SanityCheckException("slot should not be null");
-            }
+//            if (schedule.legalMovesTried != 1) {
+//                throw new SanityCheckException("slot should not be null");
+//            }
             return true;
         }
         boolean result = noCourseTwicePerDay(slot)
@@ -263,10 +265,10 @@ public class ScheduleValidator {
                 daysOn++;
             }
         }
-        boolean enoughDaysOff = ((5 - daysOn) >= course.daysOff);
+        boolean enoughDaysOff = ((FIVE - daysOn) >= course.daysOff);
         if (!enoughDaysOff) {
             errors.add("Teacher of " + course + " has only "
-                    + (5 - daysOn) + " days off instead of " + course.daysOff);
+                    + (FIVE - daysOn) + " days off instead of " + course.daysOff);
             return false;
         }
         return true;

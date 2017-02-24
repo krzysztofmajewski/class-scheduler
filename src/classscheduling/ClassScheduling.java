@@ -30,13 +30,15 @@ public class ClassScheduling {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                System.out.println(example.legalMovesTried + " legal moves tried");
+//                System.out.println(example.legalMovesTried + " legal moves tried");
                 example.print();
             }
         });
         MovesIterator iterator = new MovesIterator(example, Course.MATH);
         YesNoMaybe result = example.scheduleCourses(iterator);
         while (result.equals(MAYBE)) {
+            System.out.println();
+            example.print();
             System.out.println("\n**** Search did not complete in time. ****\n");
             System.out.print("Increasing search volume threshold to ");
             example = exampleSchedule();

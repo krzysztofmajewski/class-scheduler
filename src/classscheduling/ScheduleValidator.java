@@ -14,14 +14,12 @@ import static classscheduling.Course.GEOGRAPHY;
  */
 public class ScheduleValidator {
 
+    // in case we decide to shorten the week for testing purposes
     private static final int FIVE = Day.values().length;
             
-    private final Schedule schedule;
-
     private final ValidationErrors errors;
     
     public ScheduleValidator(Schedule schedule) {
-        this.schedule = schedule;
         errors = new ValidationErrors();
     }
 
@@ -65,10 +63,6 @@ public class ScheduleValidator {
         return result;
     }
 
-//    private void validate(Slot lastFilledSlot) throws SanityCheckException {
-//        validateCorrectnessConstraints(lastFilledSlot);
-//        validateCompletenessConstraints(lastFilledSlot);
-//    }
     private void validateCorrectnessConstraints() {
         noCourseTwicePerDay();
         teacherHasAtMostThreePeriodsPerDay();
@@ -83,11 +77,6 @@ public class ScheduleValidator {
         enoughPeriodsPerWeek();
     }
 
-//    // once violated, can be un-violated by filling more slots
-//    private void validateCompletenessConstraints(Slot slot) {
-//        frenchConferenceClassComplete(slot);
-//        enoughPeriodsPerWeek(slot);
-//    }
     private boolean enoughPeriodsPerWeek() {
         boolean result = true;
         for (Course course : Course.values()) {
@@ -110,11 +99,6 @@ public class ScheduleValidator {
         return result;
     }
 
-//    private boolean enoughPeriodsPerWeek(Slot slot) {
-//        char c = slot.gradeDay.get(slot.period);
-//        Course course = Course.forCode(c);
-//        return enoughPeriodsPerWeek(course);
-//    }
     private boolean notTooManyPeriodsPerWeek() {
         for (Course course : Course.values()) {
             for (Grade g : Grade.values()) {

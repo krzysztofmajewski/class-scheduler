@@ -134,10 +134,15 @@ public class Schedule {
             }
             System.out.println(freeSlots + " free slots");
             print();
-            System.out.println(subproblemIterator.totalMovesTried
-                    + " legal and illegal moves exhaustively searched in this subproblem");
-            System.out.println(iterator.totalMovesTried
-                    + " legal and illegal moved exhaustively searched in this bounded game");
+            if (subproblemIterator.takingTooLong()) {
+                System.out.println(subproblemIterator.totalMovesTried
+                        + " legal and illegal moves searched in this too-slow subproblem");
+            } else {
+                System.out.println(subproblemIterator.totalMovesTried
+                        + " legal and illegal moves searched in this subproblem");
+            }
+            System.out.println(iterator.totalMovesTried + iterator.totalMovesFromMaybes
+                    + " legal and illegal moved searched in this bounded game");
             if (iterator.currentCourse == null) {
                 System.out.println("This iterator has attempted all of its moves");
             } else {

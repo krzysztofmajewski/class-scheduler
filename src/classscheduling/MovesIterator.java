@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class MovesIterator {
 
-    static long VOLUME_THRESHOLD = 1000; //MILLION;
+    static long VOLUME_THRESHOLD = MILLION;
     private final Schedule schedule;
 
     long totalMovesTried;

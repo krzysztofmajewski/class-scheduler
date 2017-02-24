@@ -26,6 +26,7 @@ public class Schedule {
 
     int freeSlots = 60;
     int largestNumberOfFreeSlotsWhenBacktracking = 0;
+    long largestNumberOfMovesPrunedInAWhileLoop = 0;
 
     final ScheduleValidator validator;
 
@@ -54,12 +55,14 @@ public class Schedule {
 
     // returns true if it finds a solution
     YesNoMaybe scheduleCourses(MovesIterator iterator) throws SanityCheckException {
+        long howManyMovesReturnedMaybe = 0;
         while (iterator.notDone()) {
             Slot slot = (Slot) iterator.move();
             // check for correctness of current schedule
             validator.reset();
             validator.validateCorrectnessConstraints(slot);
             if (validator.hasErrors()) {
+                iterator.illegalMovesTried++;
                 // no solution from this move, try another slot
                 iterator.retreat(slot);
                 continue;
@@ -70,21 +73,20 @@ public class Schedule {
             }
             MovesIterator subproblemIterator = new MovesIterator(iterator);
             YesNoMaybe hasSolution = scheduleCourses(subproblemIterator);
-            processResult(hasSolution, iterator, subproblemIterator, slot);
+            if (hasSolution.equals(MAYBE)) {
+                howManyMovesReturnedMaybe++;
+            }
+            processResult(hasSolution, iterator, subproblemIterator, slot, howManyMovesReturnedMaybe);
             if (hasSolution.equals(YES)) {
                 return YES;
             }
         }
-        if (iterator.totalMovesFromMaybes > 0) {
-            // now we can add these guys back
-            iterator.totalMovesTried += iterator.totalMovesFromMaybes;
-        }
         if (iterator.takingTooLong()) {
             // this iterator has searched too many moves
+            iterator.movesPruned++;
             return MAYBE;
         }
         // this iterator searched all of its candidates moves
-        // none of them returned MAYBE
         // iterator tried all its moves
         if (freeSlots > 0) {
             if (Course.values().length == 5) {
@@ -94,33 +96,33 @@ public class Schedule {
         // no free slots left, or else we are trying a partial schedule
         validator.validate();
         if (validator.hasErrors()) {
+            iterator.illegalMovesTried++;
             return NO;
         }
         return YES;
     }
 
-    void processResult(YesNoMaybe hasSolution, MovesIterator iterator, MovesIterator subproblemIterator, Slot slot) throws SanityCheckException {
+    void processResult(YesNoMaybe hasSolution, MovesIterator iterator, MovesIterator subproblemIterator, Slot slot,
+            long fuckfuckfuckfuckfuck) throws SanityCheckException {
+        iterator.movesPruned += subproblemIterator.movesPruned;
         switch (hasSolution) {
             case YES:
-                iterator.totalMovesTried += subproblemIterator.totalMovesTried;
                 break;
             case MAYBE:
-                // do not add these to our moves count yet
-                // we want to continue trying the rest of our candidate moves
-                iterator.totalMovesFromMaybes += subproblemIterator.totalMovesTried;
-                retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot);
-//                iterator.retreat(slot);
+                retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot, fuckfuckfuckfuckfuck);
                 break;
             case NO:
-                iterator.totalMovesTried += subproblemIterator.totalMovesTried;
-                retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot);
+                iterator.illegalMovesTried += subproblemIterator.illegalMovesTried;
+                retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot, fuckfuckfuckfuckfuck);
         }
     }
 
-    void retreatAndPrintInfoIfNeeded(MovesIterator iterator, MovesIterator subproblemIterator, Slot slot) throws SanityCheckException {
+    void retreatAndPrintInfoIfNeeded(MovesIterator iterator, MovesIterator subproblemIterator, Slot slot,
+            long fuck) throws SanityCheckException {
         boolean printRetreatInfo = false;
-        if (freeSlots > largestNumberOfFreeSlotsWhenBacktracking) {
+        if ((fuck > largestNumberOfMovesPrunedInAWhileLoop) || (freeSlots > largestNumberOfFreeSlotsWhenBacktracking)) {
             largestNumberOfFreeSlotsWhenBacktracking = freeSlots;
+            largestNumberOfMovesPrunedInAWhileLoop = fuck;
             System.out.println("\nRetreating from: " + slot);
             printRetreatInfo = true;
         }
@@ -134,15 +136,15 @@ public class Schedule {
             }
             System.out.println(freeSlots + " free slots");
             print();
+            String slowOrHopeless = "hopeless";
             if (subproblemIterator.takingTooLong()) {
-                System.out.println(subproblemIterator.totalMovesTried
-                        + " legal and illegal moves searched in this too-slow subproblem");
-            } else {
-                System.out.println(subproblemIterator.totalMovesTried
-                        + " legal and illegal moves searched in this subproblem");
+                slowOrHopeless = "slow";
             }
-            System.out.println(iterator.totalMovesTried + iterator.totalMovesFromMaybes
-                    + " legal and illegal moved searched in this bounded game");
+            System.out.println(subproblemIterator.illegalMovesTried
+                    + " illegal moves found in this "
+                    + slowOrHopeless + " subproblem");
+            System.out.println(fuck
+                    + " moves pruned so far in this fucking while loop");
             if (iterator.currentCourse == null) {
                 System.out.println("This iterator has attempted all of its moves");
             } else {

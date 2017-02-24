@@ -24,6 +24,11 @@ public class GradeDay {
         periods = new char[PERIODS_PER_DAY];
     }
 
+    @Override
+    public String toString() {
+        return this.grade.toString();
+    }
+    
     public void set(Period period, char course) {
         periods[period.ordinal()] = course;
     }

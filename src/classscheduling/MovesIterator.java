@@ -15,13 +15,13 @@ import java.util.List;
  */
 public class MovesIterator {
 
-    static long VOLUME_THRESHOLD = MILLION;
+    static long VOLUME_THRESHOLD = 1000; //MILLION;
     private final Schedule schedule;
 
-    long totalMovesTried;
+    long illegalMovesTried;
     
-    long totalMovesFromMaybes;
-
+    long movesPruned;
+    
     private final List<Slot> remainingSlots;
 
     private final List<Course> remainingCourses;
@@ -62,16 +62,15 @@ public class MovesIterator {
     }
 
     boolean notDone() {
-        return nextSlotToTry != null && currentCourse != null && !takingTooLong();
+        return nextSlotToTry != null && currentCourse != null;
     }
 
     boolean takingTooLong() {
-        return totalMovesTried >= VOLUME_THRESHOLD;
+        return illegalMovesTried >= VOLUME_THRESHOLD;
     }
 
     // returns a slot filled with a course that has not yet been tried in that slot
     Slot move() throws SanityCheckException {
-        totalMovesTried++;
         Slot result = nextSlotToTry;
         schedule.set(result, currentCourse);
         if (!remainingSlots.remove((Slot) result)) {

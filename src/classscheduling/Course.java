@@ -14,8 +14,8 @@ public enum Course {
     // order matters!   
     MATH("Math", 'M', 4, 1),
     FRENCH("French", 'F', 5, 0),
-    GEOGRAPHY("Geography", 'G', 2, 0);
-//    ART("Art", 'A', 2, 2);
+    GEOGRAPHY("Geography", 'G', 2, 0),
+    ART("Art", 'A', 2, 2);
 //    ENGLISH("English", 'E', 4, 1);
 //    MUSIC("Music", 'U', 3, 1);
 
@@ -51,8 +51,8 @@ public enum Course {
                 return FRENCH;
             case 'G':
                 return GEOGRAPHY;
-//            case 'A':
-//                return ART;
+            case 'A':
+                return ART;
 //            case 'U':
 //                return MUSIC;
             default:

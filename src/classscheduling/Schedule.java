@@ -54,9 +54,11 @@ public class Schedule {
     }
 
     // returns true if it finds a solution
-    YesNoMaybe scheduleCourses(MovesIterator iterator) throws SanityCheckException {
-        long howManyMovesReturnedMaybe = 0;
+    boolean scheduleCourses(MovesIterator iterator) throws SanityCheckException {
         while (iterator.notDone()) {
+            if (iterator.takingTooLong()) {
+                return false;
+            }
             Slot slot = (Slot) iterator.move();
             // check for correctness of current schedule
             validator.reset();
@@ -72,85 +74,70 @@ public class Schedule {
                 iterator.selectNextCourse();
             }
             MovesIterator subproblemIterator = new MovesIterator(iterator);
-            YesNoMaybe hasSolution = scheduleCourses(subproblemIterator);
-            if (hasSolution.equals(MAYBE)) {
-                howManyMovesReturnedMaybe++;
+            boolean hasSolution = scheduleCourses(subproblemIterator);
+            // exhaustive search failed, or move took too long
+            processResult(hasSolution, iterator, subproblemIterator, slot);
+            if (hasSolution) {
+                return true;
             }
-            processResult(hasSolution, iterator, subproblemIterator, slot, howManyMovesReturnedMaybe);
-            if (hasSolution.equals(YES)) {
-                return YES;
-            }
-        }
-        if (iterator.takingTooLong()) {
-            // this iterator has searched too many moves
-            iterator.movesPruned++;
-            return MAYBE;
         }
         // this iterator searched all of its candidates moves
         // iterator tried all its moves
         if (freeSlots > 0) {
             if (Course.values().length == 5) {
-                return NO;
+                return false;
             }
         }
         // no free slots left, or else we are trying a partial schedule
         validator.validate();
         if (validator.hasErrors()) {
             iterator.illegalMovesTried++;
-            return NO;
+            return false;
         }
-        return YES;
+        return true;
     }
 
-    void processResult(YesNoMaybe hasSolution, MovesIterator iterator, MovesIterator subproblemIterator, Slot slot,
-            long fuckfuckfuckfuckfuck) throws SanityCheckException {
+    void processResult(boolean hasSolution, MovesIterator iterator, MovesIterator subproblemIterator, Slot slot) throws SanityCheckException {
+        iterator.illegalMovesTried += subproblemIterator.illegalMovesTried;
         iterator.movesPruned += subproblemIterator.movesPruned;
-        switch (hasSolution) {
-            case YES:
-                break;
-            case MAYBE:
-                retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot, fuckfuckfuckfuckfuck);
-                break;
-            case NO:
-                iterator.illegalMovesTried += subproblemIterator.illegalMovesTried;
-                retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot, fuckfuckfuckfuckfuck);
+        if (!hasSolution) {
+            retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot);
         }
     }
 
-    void retreatAndPrintInfoIfNeeded(MovesIterator iterator, MovesIterator subproblemIterator, Slot slot,
-            long fuck) throws SanityCheckException {
-        boolean printRetreatInfo = false;
-        if ((fuck > largestNumberOfMovesPrunedInAWhileLoop) || (freeSlots > largestNumberOfFreeSlotsWhenBacktracking)) {
-            largestNumberOfFreeSlotsWhenBacktracking = freeSlots;
-            largestNumberOfMovesPrunedInAWhileLoop = fuck;
-            System.out.println("\nRetreating from: " + slot);
-            printRetreatInfo = true;
-        }
+    void retreatAndPrintInfoIfNeeded(MovesIterator iterator, MovesIterator subproblemIterator, Slot slot) throws SanityCheckException {
+//        boolean printRetreatInfo = false;
+//        if ((fuck > largestNumberOfMovesPrunedInAWhileLoop) || (freeSlots > largestNumberOfFreeSlotsWhenBacktracking)) {
+        largestNumberOfFreeSlotsWhenBacktracking = freeSlots;
+//        largestNumberOfMovesPrunedInAWhileLoop = fuck;
+        System.out.println("\nRetreating from: " + slot);
+//        printRetreatInfo = true;
+//        }
         iterator.retreat(slot);
-        if (printRetreatInfo) {
-            // TODO optimize
-            if (subproblemIterator.takingTooLong()) {
-                System.out.print("Retreated from slow move, ");
-            } else {
-                System.out.print("Retreated from hopeless move, ");
-            }
-            System.out.println(freeSlots + " free slots");
-            print();
-            String slowOrHopeless = "hopeless";
-            if (subproblemIterator.takingTooLong()) {
-                slowOrHopeless = "slow";
-            }
-            System.out.println(subproblemIterator.illegalMovesTried
-                    + " illegal moves found in this "
-                    + slowOrHopeless + " subproblem");
-            System.out.println(fuck
-                    + " moves pruned so far in this fucking while loop");
-            if (iterator.currentCourse == null) {
-                System.out.println("This iterator has attempted all of its moves");
-            } else {
-                System.out.println("Next move for this iterator will try to schedule course: " + iterator.currentCourse);
-            }
+//        if (printRetreatInfo) {
+        // TODO optimize
+        if (subproblemIterator.takingTooLong()) {
+            System.out.print("Retreated from slow move, ");
+        } else {
+            System.out.print("Retreated from hopeless move, ");
         }
+        System.out.println(freeSlots + " free slots");
+        print();
+        String slowOrHopeless = "hopeless";
+        if (subproblemIterator.takingTooLong()) {
+            slowOrHopeless = "slow";
+        }
+        System.out.println(subproblemIterator.illegalMovesTried
+                + " illegal moves found in this "
+                + slowOrHopeless + " subproblem");
+//            System.out.println(fuck
+//                    + " moves pruned so far in this fucking while loop");
+        if (iterator.currentCourse == null) {
+            System.out.println("This iterator has attempted all of its moves");
+        } else {
+            System.out.println("Next move for this iterator will try to schedule course: " + iterator.currentCourse);
+        }
+//        }
     }
 
     boolean enoughPeriodsPerWeek(Course course) {

@@ -35,8 +35,8 @@ public class ClassScheduling {
             }
         });
         MovesIterator iterator = new MovesIterator(example, Course.MATH);
-        YesNoMaybe result = example.scheduleCourses(iterator);
-        while (result.equals(MAYBE)) {
+        boolean result = example.scheduleCourses(iterator);
+        while (!result && iterator.takingTooLong()) {
             System.out.println();
             example.print();
             System.out.println("\n**** Search did not complete in time. ****\n");
@@ -47,17 +47,12 @@ public class ClassScheduling {
             System.out.println(MovesIterator.VOLUME_THRESHOLD);
             result = example.scheduleCourses(iterator);
         }
-        switch (result) {
-            case YES:
-                System.out.println("Success!");
-                break;
-            case NO:
-                System.out.println("Failed.");
-                example.print();
-                break;
-            default:
-                throw new SanityCheckException("this code should be unreachable");
+        if (result) {
+            System.out.println("Success!");
+        } else {
+            System.out.println("Failed.");
         }
+        example.print();
         example.validator.validate();
         // this should not print anything in case of success
         example.validator.printErrors();

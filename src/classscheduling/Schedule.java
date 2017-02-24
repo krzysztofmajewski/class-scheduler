@@ -91,7 +91,7 @@ public class Schedule {
                 return NO;
             }
         }
-        // no free slots left, or else we are in test mode
+        // no free slots left, or else we are trying a partial schedule
         validator.validate();
         if (validator.hasErrors()) {
             return NO;
@@ -108,35 +108,45 @@ public class Schedule {
                 // do not add these to our moves count yet
                 // we want to continue trying the rest of our candidate moves
                 iterator.totalMovesFromMaybes += subproblemIterator.totalMovesTried;
-                iterator.retreat(slot);
+                retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot);
+//                iterator.retreat(slot);
                 break;
             case NO:
                 iterator.totalMovesTried += subproblemIterator.totalMovesTried;
-                boolean printRetreatInfo = false;
-                if (freeSlots > largestNumberOfFreeSlotsWhenBacktracking) {
-                    largestNumberOfFreeSlotsWhenBacktracking = freeSlots;
-                    System.out.println("\nRetreating from: " + slot);
-                    printRetreatInfo = true;
-                }
-                iterator.retreat(slot);
-                if (printRetreatInfo) {
-                    System.out.println("Retreated from hopeless move, " + freeSlots + " free slots");
-                    print();
-                    System.out.println(subproblemIterator.totalMovesTried
-                            + " legal and illegal moves exhaustively searched in this subproblem");
-                    System.out.println(iterator.totalMovesTried
-                            + " legal and illegal moved exhaustively searched in this bounded game");
-                    if (iterator.currentCourse == null) {
-                        System.out.println("This iterator has attempted all of its moves");
-                    } else {
-                        System.out.println("Next move for this iterator will try to schedule course: " + iterator.currentCourse);
-                    }
-                }
+                retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot);
         }
     }
 
-    boolean enoughPeriodsPerWeek(Course course
-    ) {
+    void retreatAndPrintInfoIfNeeded(MovesIterator iterator, MovesIterator subproblemIterator, Slot slot) throws SanityCheckException {
+        boolean printRetreatInfo = false;
+        if (freeSlots > largestNumberOfFreeSlotsWhenBacktracking) {
+            largestNumberOfFreeSlotsWhenBacktracking = freeSlots;
+            System.out.println("\nRetreating from: " + slot);
+            printRetreatInfo = true;
+        }
+        iterator.retreat(slot);
+        if (printRetreatInfo) {
+            // TODO optimize
+            if (subproblemIterator.takingTooLong()) {
+                System.out.print("Retreated from slow move, ");
+            } else {
+                System.out.print("Retreated from hopeless move, ");
+            }
+            System.out.println(freeSlots + " free slots");
+            print();
+            System.out.println(subproblemIterator.totalMovesTried
+                    + " legal and illegal moves exhaustively searched in this subproblem");
+            System.out.println(iterator.totalMovesTried
+                    + " legal and illegal moved exhaustively searched in this bounded game");
+            if (iterator.currentCourse == null) {
+                System.out.println("This iterator has attempted all of its moves");
+            } else {
+                System.out.println("Next move for this iterator will try to schedule course: " + iterator.currentCourse);
+            }
+        }
+    }
+
+    boolean enoughPeriodsPerWeek(Course course) {
         for (Grade g : Grade.values()) {
             if (course.getPeriodsScheduled(g) < course.periods) {
                 return false;

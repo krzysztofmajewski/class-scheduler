@@ -15,8 +15,8 @@ public enum Course {
     MATH("Math", 'M', 4, 1),
     FRENCH("French", 'F', 5, 0),
     GEOGRAPHY("Geography", 'G', 2, 0),
-    ART("Art", 'A', 2, 2);
-//    ENGLISH("English", 'E', 4, 1);
+    ART("Art", 'A', 2, 2),
+    ENGLISH("English", 'E', 4, 1);
 //    MUSIC("Music", 'U', 3, 1);
 
     final String name;
@@ -45,8 +45,8 @@ public enum Course {
         switch (c) {
             case 'M':
                 return MATH;
-//            case 'E':
-//                return ENGLISH;
+            case 'E':
+                return ENGLISH;
             case 'F':
                 return FRENCH;
             case 'G':

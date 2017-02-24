@@ -9,7 +9,7 @@ import static classscheduling.Course.MATH;
 import static classscheduling.Day.MONDAY;
 import static classscheduling.Grade.NINE;
 import static classscheduling.Period.SECOND;
-import static classscheduling.Schedule.MILLION;
+import static classscheduling.YesNoMaybe.MAYBE;
 
 /**
  *
@@ -17,13 +17,15 @@ import static classscheduling.Schedule.MILLION;
  */
 public class ClassScheduling {
 
+    static Schedule example;
+
     /**
      * @param args the command line arguments
      * @throws Exception if something goes wrong
      */
     public static void main(String[] args) throws Exception {
 
-        Schedule example = exampleSchedule();
+        example = exampleSchedule();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -34,15 +36,25 @@ public class ClassScheduling {
         });
         MovesIterator iterator = new MovesIterator(example, Course.MATH);
         YesNoMaybe result = example.scheduleCourses(iterator);
+        while (result.equals(MAYBE)) {
+            System.out.println("\n**** Search did not complete in time. ****\n");
+            System.out.print("Increasing search volume threshold to ");
+            example = exampleSchedule();
+            iterator = new MovesIterator(example, Course.MATH);
+            MovesIterator.increaseThreshold();
+            System.out.println(MovesIterator.VOLUME_THRESHOLD);
+            result = example.scheduleCourses(iterator);
+        }
         switch (result) {
             case YES:
                 System.out.println("Success!");
                 break;
             case NO:
                 System.out.println("Failed.");
+                example.print();
                 break;
             default:
-                System.out.println("Search did not complete in time.");
+                throw new SanityCheckException("this code should be unreachable");
         }
         example.validator.validate();
         // this should not print anything in case of success

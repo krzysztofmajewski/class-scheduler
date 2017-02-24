@@ -24,7 +24,7 @@ public enum Course {
     final int periods;
     final int daysOff;
 
-    final private int periodsScheduled[];
+    private int periodsScheduled[];
 
     private Course(String name, char code, int periods, int daysOff) {
         this.name = name;
@@ -32,6 +32,12 @@ public enum Course {
         this.periods = periods;
         this.daysOff = daysOff;
         periodsScheduled = new int[3];
+    }
+
+    static void reset() {
+        for (Course course : Course.values()) {
+            course.periodsScheduled = new int[3];
+        }
     }
 
     public static Course forCode(char c) {

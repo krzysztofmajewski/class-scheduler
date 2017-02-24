@@ -10,27 +10,28 @@ package classscheduling;
  * @author krzys
  */
 public class GradeDay {
+
     public static final int PERIODS_PER_DAY = Period.values().length;
-    
+
     Grade grade;
     Day day;
 
     final private char[] periods;
-        
+
     public GradeDay(Grade grade, Day day) {
         this.grade = grade;
         this.day = day;
         periods = new char[PERIODS_PER_DAY];
     }
-    
+
     public void set(Period period, char course) {
         periods[period.ordinal()] = course;
     }
-    
+
     public char get(Period period) {
         return periods[period.ordinal()];
     }
-    
+
     public Course getCourse(Period period) {
         char c = get(period);
         return Course.forCode(c);
@@ -43,7 +44,13 @@ public class GradeDay {
         }
         periods[period.ordinal()] = 0;
     }
-    
+
+    void clear() {
+        for (Period period : Period.values()) {
+            periods[period.ordinal()] = 0;
+        }
+    }
+
     public int count(char course) {
         int result = 0;
         for (char c : periods) {
@@ -53,10 +60,9 @@ public class GradeDay {
         }
         return result;
     }
-    
+
     public boolean hasCourse(char course, Period period) {
         return (periods[period.ordinal()] == course);
     }
-
 
 }

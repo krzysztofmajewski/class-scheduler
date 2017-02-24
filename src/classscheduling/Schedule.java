@@ -33,6 +33,7 @@ public class Schedule {
     public Schedule() {
         validator = new ScheduleValidator(this);
         freeSlotList = initFreeSlotList();
+        Course.reset();
     }
 
     void print() {
@@ -54,7 +55,6 @@ public class Schedule {
 
     // returns true if it finds a solution
     YesNoMaybe scheduleCourses(MovesIterator iterator) throws SanityCheckException {
-        boolean foundMoveThatTookTooLong = false;
         while (iterator.notDone()) {
             Slot slot = (Slot) iterator.move();
             // check for correctness of current schedule
@@ -72,26 +72,14 @@ public class Schedule {
             legalMovesTried++;
             MovesIterator subproblemIterator = new MovesIterator(iterator);
             YesNoMaybe hasSolution = scheduleCourses(subproblemIterator);
-            long x = iterator.movesTriedInThisMillion + subproblemIterator.movesTriedInThisMillion;
-            long y = 0;
-            if (x > MILLION) {
-                y++;
-                x -= MILLION;
-            }
-            iterator.millionsOfMovesTried += subproblemIterator.millionsOfMovesTried + y;
-            iterator.movesTriedInThisMillion = x;
-            if (iterator.takingTooLong()) {
-                iterator.retreat(slot);
-                return MAYBE;
-            }
             switch (hasSolution) {
                 case YES:
+                    updateMovesTried(iterator, subproblemIterator);
                     return YES;
                 case MAYBE:
-                    foundMoveThatTookTooLong = true;
-                    iterator.retreat(slot);
-                    continue;
+                    return MAYBE;
                 case NO:
+                    updateMovesTried(iterator, subproblemIterator);
                     boolean printRetreatInfo = false;
                     if (freeSlots > largestNumberOfFreeSlotsWhenBacktracking) {
                         largestNumberOfFreeSlotsWhenBacktracking = freeSlots;
@@ -113,12 +101,13 @@ public class Schedule {
                     }
             }
         }
+        if (iterator.tookTooLong()) {
+            return MAYBE;
+        }
+        // iterator tried all its moves
         validator.reset();
         validator.validate();
         if (validator.hasErrors()) {
-            if (foundMoveThatTookTooLong) {
-                return MAYBE;
-            }
             return NO;
         }
         return YES;
@@ -148,6 +137,7 @@ public class Schedule {
         ArrayList<Slot> result = new ArrayList<>();
         for (Grade g : Grade.values()) {
             for (Day day : Day.values()) {
+                day.reset();
                 for (Period p : Period.values()) {
                     if (day.getGradeDay(g).get(p) == 0) {
                         Slot slot = new Slot();
@@ -187,19 +177,33 @@ public class Schedule {
         return slot;
     }
 
-    private void printProgress(Slot slot, Course course, MovesIterator iterator) {
-        // print a status update every once in a while
-//        if ((movesTried % MILLION) == 1) {
-        System.out.println("[" + VERSION + "] " + freeSlots + " free slots left after "
-                + legalMovesTried + " legal moves:");
-        print();
-//            validator.reset();
-//            validator.validate();
-//            validator.printErrors();
-//            System.out.println(iterator.repeatedBadMoves + " known bad moves made on this solution path (" 
-//            + iterator.totalMoves + " total)");
-        System.out.println(slot);
+//    private void printProgress(Slot slot, Course course, MovesIterator iterator) {
+//        // print a status update every once in a while
+////        if ((movesTried % MILLION) == 1) {
+//        System.out.println("[" + VERSION + "] " + freeSlots + " free slots left after "
+//                + legalMovesTried + " legal moves:");
+//        print();
+////            validator.reset();
+////            validator.validate();
+////            validator.printErrors();
+////            System.out.println(iterator.repeatedBadMoves + " known bad moves made on this solution path (" 
+////            + iterator.totalMoves + " total)");
+//        System.out.println(slot);
+////    }
 //    }
+    private void updateMovesTried(MovesIterator iterator, MovesIterator subproblemIterator) {
+        long x = iterator.movesTriedInThisMillion + subproblemIterator.movesTriedInThisMillion;
+        long y = 0;
+        // assume if x < MILLION and y < MILLION, then (x+y-MILLION) < MILLION
+        // proof: x+y < 2*MILLION
+        //    --> x+y-MILLION < 2*MILLION - MILLION
+        //    --> x+y-MILLION < MILLION
+        if (x > MILLION) {
+            y++;
+            x -= MILLION;
+        }
+        iterator.millionsOfMovesTried += subproblemIterator.millionsOfMovesTried + y;
+        iterator.movesTriedInThisMillion = x;
     }
 
 }

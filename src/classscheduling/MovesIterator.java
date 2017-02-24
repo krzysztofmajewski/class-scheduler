@@ -7,7 +7,6 @@ package classscheduling;
 
 import static classscheduling.Schedule.MILLION;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -18,7 +17,7 @@ import java.util.Random;
  */
 public class MovesIterator {
 
-    final static long MAX_ATTEMPTED_MOVES = 100;
+    static long VOLUME_THRESHOLD = MILLION;
     private final Schedule schedule;
 
     private final HashMap<Slot, List<Course>> badMoves;
@@ -83,10 +82,15 @@ public class MovesIterator {
         }
     }
 
-    public boolean notDone() {
-        return nextSlotToTry != null && currentCourse != null;
+    boolean notDone() {
+        return nextSlotToTry != null && currentCourse != null && !tookTooLong();
     }
 
+    boolean tookTooLong() {
+        long totalMovesTried = movesTriedInThisMillion + MILLION * millionsOfMovesTried;
+        return totalMovesTried >= VOLUME_THRESHOLD;
+    }
+    
     // returns a slot filled with a course that has not yet been tried in that slot
     Slot move() throws SanityCheckException {
         if (movesTriedInThisMillion < MILLION) {
@@ -117,11 +121,12 @@ public class MovesIterator {
         schedule.clear(slot);
     }
 
-    boolean takingTooLong() {
-//                return (millionsOfMovesTried > 186);
-//        return (millionsOfMovesTried > 1);
-        return (millionsOfMovesTried > 0) && (movesTriedInThisMillion > 1000);
-    }
+//    boolean takingTooLong() {
+////                return (millionsOfMovesTried > 186);
+////        return (millionsOfMovesTried > 1);
+////        return (millionsOfMovesTried > 1); // && (movesTriedInThisMillion > 1000);
+//        return movesTriedInThisMillion > 10;
+//    }
 
     void selectNextCourse() throws SanityCheckException {
         for (Slot slot : schedule.freeSlotList) {
@@ -212,4 +217,13 @@ public class MovesIterator {
 //        List<Course> badMovesForThisSlot = badMoves.get(slot);
 //        return badMovesForThisSlot.contains(course);
 //    }
+
+//    boolean heads() {
+//        int zeroOrOne = randomGenerator.nextInt(2);
+//        return (zeroOrOne > 0);
+//    }
+
+    static void increaseThreshold() {
+        VOLUME_THRESHOLD *= 2;
+    }
 }

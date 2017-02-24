@@ -17,4 +17,9 @@ public class SanityCheckException extends Exception {
         this.s = s;
     }
     
+    @Override
+    public String getMessage() {
+        return s;
+    }
+    
 }

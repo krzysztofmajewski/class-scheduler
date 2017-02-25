@@ -17,6 +17,8 @@ import static classscheduling.YesNoMaybe.MAYBE;
  */
 public class ClassScheduling {
 
+    static final long MAX_THRESHOLD = 20;
+
     static Schedule example;
 
     /**
@@ -40,11 +42,14 @@ public class ClassScheduling {
             System.out.println();
             example.print();
             System.out.println("\n**** Search did not complete in time. ****\n");
-            System.out.print("Increasing search volume threshold to ");
+            MovesIterator.increaseThreshold();
+            if (MovesIterator.VOLUME_THRESHOLD > MAX_THRESHOLD) {
+                break;
+            }
+            System.out.println("Increasing search volume threshold to "
+            + MovesIterator.VOLUME_THRESHOLD);
             example = exampleSchedule();
             iterator = new MovesIterator(example, Course.MATH);
-            MovesIterator.increaseThreshold();
-            System.out.println(MovesIterator.VOLUME_THRESHOLD);
             result = example.scheduleCourses(iterator);
         }
         if (result) {

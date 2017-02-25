@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class MovesIterator {
 
-    static long VOLUME_THRESHOLD = 1000; //MILLION;
+    static long VOLUME_THRESHOLD = 200; //MILLION;
     private final Schedule schedule;
 
     long illegalMovesTried;
@@ -59,6 +59,7 @@ public class MovesIterator {
         for (Course course : other.remainingCourses) {
             remainingCourses.add(course);
         }
+        illegalMovesTried = other.illegalMovesTried;
     }
 
     boolean notDone() {

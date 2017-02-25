@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class MovesIterator {
 
-    static long VOLUME_THRESHOLD = 200; //MILLION;
+    static long BAD_MOVE_THRESHOLD = 100;
     private final Schedule schedule;
 
     long illegalMovesTried;
@@ -67,7 +67,7 @@ public class MovesIterator {
     }
 
     boolean takingTooLong() {
-        return illegalMovesTried >= VOLUME_THRESHOLD;
+        return illegalMovesTried >= BAD_MOVE_THRESHOLD;
     }
 
     // returns a slot filled with a course that has not yet been tried in that slot
@@ -116,6 +116,6 @@ public class MovesIterator {
     }
 
     static void increaseThreshold() {
-        VOLUME_THRESHOLD *= 2;
+        BAD_MOVE_THRESHOLD *= 2;
     }
 }

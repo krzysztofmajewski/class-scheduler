@@ -26,9 +26,12 @@ public class Schedule {
 
     int freeSlots = 60;
     int largestNumberOfFreeSlotsWhenBacktracking = 0;
-    long largestNumberOfMovesPrunedInAWhileLoop = 0;
+    long movesSeenInThisGame = 0;
+    long movesPrunedInThisGame = 0;
 
     final ScheduleValidator validator;
+    
+    static final boolean VERBOSE = false;
 
     public Schedule() {
         validator = new ScheduleValidator(this);
@@ -55,8 +58,16 @@ public class Schedule {
 
     // returns true if it finds a solution
     boolean scheduleCourses(MovesIterator iterator) throws SanityCheckException {
+        logln("moves seen so far in this game: " + movesSeenInThisGame);
+        logln("moves pruned so far in this game: " + movesPrunedInThisGame);
+        logprint();
+        logln("");
+        movesSeenInThisGame++;
         while (iterator.notDone()) {
             if (iterator.takingTooLong()) {
+                logln("taking too long");
+                logprint();
+                movesPrunedInThisGame++;
                 return false;
             }
             Slot slot = (Slot) iterator.move();
@@ -66,12 +77,15 @@ public class Schedule {
             if (validator.hasErrors()) {
                 // no solution from this move, try another slot
                 iterator.illegalMovesTried++;
+                logln("This move turned out to be illegal: " + slot);
                 iterator.retreat(slot);
+                // we have to count it here, OW it will not be counted
+                movesSeenInThisGame++;
                 continue;
             }
             // valid move
-//            System.out.println("Valid move: " + slot);
-//            print();
+            logln("Valid move: " + slot);
+            // this move will be counted when we invoke recursive call
             if (enoughPeriodsPerWeek(iterator.currentCourse)) {
                 iterator.selectNextCourse();
             }
@@ -115,6 +129,8 @@ public class Schedule {
                 System.out.print("Retreated from hopeless move, ");
             }
             System.out.println(freeSlots + " free slots");
+            System.out.println(movesSeenInThisGame + " moves seen in this game");
+            System.out.println(movesPrunedInThisGame + " moves pruned in this game");
             print();
             if (iterator.currentCourse == null) {
                 System.out.println("This iterator has attempted all of its moves");
@@ -188,6 +204,23 @@ public class Schedule {
         return slot;
     }
 
+    void logln(String message) {
+        if (VERBOSE) {
+            System.out.println(message);
+        }
+    }
+
+    void log(String message) {
+        if (VERBOSE) {
+            System.out.print(message);
+        }
+    }
+    
+    void logprint() {
+        if (VERBOSE) {
+            print();
+        }
+    }
 //    private void printProgress(Slot slot, Course course, MovesIterator iterator) {
 //        // print a status update every once in a while
 ////        if ((movesTried % MILLION) == 1) {

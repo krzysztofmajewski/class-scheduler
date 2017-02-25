@@ -9,7 +9,6 @@ import static classscheduling.Course.MATH;
 import static classscheduling.Day.MONDAY;
 import static classscheduling.Grade.NINE;
 import static classscheduling.Period.SECOND;
-import static classscheduling.YesNoMaybe.MAYBE;
 
 /**
  *
@@ -17,7 +16,7 @@ import static classscheduling.YesNoMaybe.MAYBE;
  */
 public class ClassScheduling {
 
-    static final long MAX_THRESHOLD = 20;
+    static final long MAX_ITERATIONS = 1;
 
     static Schedule example;
 
@@ -38,16 +37,18 @@ public class ClassScheduling {
         });
         MovesIterator iterator = new MovesIterator(example, Course.MATH);
         boolean result = example.scheduleCourses(iterator);
-        while (!result && iterator.takingTooLong()) {
+        int iterations = 1;
+        while (!result && iterator.takingTooLong() && (iterations < MAX_ITERATIONS)) {
+            iterations++;
             System.out.println();
             example.print();
             System.out.println("\n**** Search did not complete in time. ****\n");
             MovesIterator.increaseThreshold();
-            if (MovesIterator.VOLUME_THRESHOLD > MAX_THRESHOLD) {
+            if (MovesIterator.BAD_MOVE_THRESHOLD > MAX_ITERATIONS) {
                 break;
             }
             System.out.println("Increasing search volume threshold to "
-            + MovesIterator.VOLUME_THRESHOLD);
+            + MovesIterator.BAD_MOVE_THRESHOLD);
             example = exampleSchedule();
             iterator = new MovesIterator(example, Course.MATH);
             result = example.scheduleCourses(iterator);
@@ -57,7 +58,6 @@ public class ClassScheduling {
         } else {
             System.out.println("Failed.");
         }
-        example.print();
         example.validator.validate();
         // this should not print anything in case of success
         example.validator.printErrors();

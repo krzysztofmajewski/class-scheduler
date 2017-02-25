@@ -15,12 +15,14 @@ import java.util.List;
  */
 public class MovesIterator {
 
-    static long MOVE_THRESHOLD = 200;
+    static long MOVE_THRESHOLD = MILLION;
     private final Schedule schedule;
 
     long illegalMovesTried;
     long legalMovesTried;
     long promisingMovesTried;
+    long movesTriedSinceLastMostPromisingMove;
+    long movesSinceLastMostPromisingInThisSubsearch;
 
     long movesPruned;
 
@@ -64,6 +66,7 @@ public class MovesIterator {
         illegalMovesTried = other.illegalMovesTried;
         promisingMovesTried = other.promisingMovesTried;
         legalMovesTried = other.legalMovesTried;
+        movesTriedSinceLastMostPromisingMove = other.movesTriedSinceLastMostPromisingMove;
     }
 
     boolean notDone() {
@@ -71,7 +74,7 @@ public class MovesIterator {
     }
 
     boolean takingTooLong() {
-        return legalMovesTried + illegalMovesTried >= MOVE_THRESHOLD;
+        return movesSinceLastMostPromisingInThisSubsearch >= MOVE_THRESHOLD;
     }
 
     // returns a slot filled with a course that has not yet been tried in that slot

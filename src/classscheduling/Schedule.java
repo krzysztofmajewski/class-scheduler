@@ -23,9 +23,8 @@ public class Schedule {
     public static final int MILLION = 1000 * 1000;
 
     final List<Slot> freeSlotList;
-    
-//    final List<Slot> bestStateSeenSoFar;
 
+//    final List<Slot> bestStateSeenSoFar;
     int freeSlots = 60;
     int largestNumberOfFreeSlotsWhenBacktracking = 0;
     long movesSeenInThisGame = 0;
@@ -33,7 +32,7 @@ public class Schedule {
     long mostPromisingMovesInThisGame = 0;
 
     final ScheduleValidator validator;
-    
+
     static final boolean VERBOSE = false;
 
     public Schedule() {
@@ -41,13 +40,12 @@ public class Schedule {
         freeSlotList = initFreeSlotList();
         Course.reset();
     }
-    
+
 //    public Schedule(List<Slot> initialState) {
 //        validator = new ScheduleValidator(this);
 //        freeSlotList = initFreeSlotList(initialState);
 //        Course.reset();
 //    }
-
     void print() {
         for (Grade g : Grade.values()) {
             System.out.printf("%10s", g.name() + " |");
@@ -72,6 +70,8 @@ public class Schedule {
         logprint();
         logln("");
         movesSeenInThisGame++;
+        iterator.movesTriedSinceLastMostPromisingMove++;
+        iterator.movesSinceLastMostPromisingInThisSubsearch++;
         while (iterator.notDone()) {
             if (iterator.takingTooLong()) {
                 logln("taking too long");
@@ -98,10 +98,13 @@ public class Schedule {
             iterator.promisingMovesTried++;
             if (mostPromisingMovesInThisGame < iterator.promisingMovesTried) {
                 mostPromisingMovesInThisGame = iterator.promisingMovesTried;
-                System.out.println(String.format("\nMost promising move so far (depth %d, slot %s):", 
+                System.out.println(String.format("\nMost promising move so far (depth %d, slot %s):",
                         mostPromisingMovesInThisGame,
                         slot.toString()));
+                System.out.println("Moves tried since last most promising move in this subsearch: " + iterator.movesSinceLastMostPromisingInThisSubsearch);
                 print();
+                iterator.movesTriedSinceLastMostPromisingMove = 0;
+                iterator.movesSinceLastMostPromisingInThisSubsearch = 0;
             }
             // this move will be counted when we invoke recursive call
             if (enoughPeriodsPerWeek(iterator.currentCourse)) {
@@ -109,6 +112,7 @@ public class Schedule {
             }
             MovesIterator subproblemIterator = new MovesIterator(iterator);
             boolean hasSolution = scheduleCourses(subproblemIterator);
+            iterator.movesSinceLastMostPromisingInThisSubsearch += subproblemIterator.movesSinceLastMostPromisingInThisSubsearch;
             if (hasSolution) {
                 return true;
             }
@@ -235,7 +239,7 @@ public class Schedule {
             System.out.print(message);
         }
     }
-    
+
     void logprint() {
         if (VERBOSE) {
             print();

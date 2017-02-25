@@ -35,24 +35,41 @@ public class ClassScheduling {
                 example.print();
             }
         });
-        MovesIterator iterator = new MovesIterator(example, Course.MATH);
-        boolean result = example.scheduleCourses(iterator);
-        int iterations = 1;
-        while (!result && iterator.takingTooLong() && (iterations < MAX_ITERATIONS)) {
+
+        int iterations = 0;
+        boolean result;
+        MovesIterator iterator;
+        do {
             iterations++;
-            System.out.println();
-            example.print();
-            System.out.println("\n**** Search did not complete in time. ****\n");
-            MovesIterator.increaseThreshold();
-            if (MovesIterator.BAD_MOVE_THRESHOLD > MAX_ITERATIONS) {
-                break;
-            }
-            System.out.println("Increasing search volume threshold to "
-            + MovesIterator.BAD_MOVE_THRESHOLD);
             example = exampleSchedule();
             iterator = new MovesIterator(example, Course.MATH);
             result = example.scheduleCourses(iterator);
-        }
+            if (result) {
+                break;
+            }
+            if (!iterator.takingTooLong()) {
+                break;
+            }
+//            System.out.println();
+//            example.print();
+//            System.out.println("\n**** Search did not complete in time, trying endgame on best path found ****\n");
+//            example = new Schedule(example.bestStateSeenSoFar);
+//            iterator = new MovesIterator(example, Course.MATH);
+//            result = example.scheduleCourses(iterator);
+//            if (result) {
+//                break;
+//            }
+//            if (!iterator.takingTooLong()) {
+//                System.out.println("\n**** Endgame failed ****\n");
+//                // this starting state did not lead to a win
+//            } else {
+//                System.out.println("\n**** Endgame did not complete in time ****\n");
+//            }
+//            MovesIterator.increaseThreshold();
+//            System.out.println("Increasing search volume threshold to "
+//                    + MovesIterator.BAD_MOVE_THRESHOLD);
+        } while (iterations < MAX_ITERATIONS);
+
         if (result) {
             System.out.println("Success!");
         } else {

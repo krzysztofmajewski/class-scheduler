@@ -23,11 +23,14 @@ public class Schedule {
     public static final int MILLION = 1000 * 1000;
 
     final List<Slot> freeSlotList;
+    
+//    final List<Slot> bestStateSeenSoFar;
 
     int freeSlots = 60;
     int largestNumberOfFreeSlotsWhenBacktracking = 0;
     long movesSeenInThisGame = 0;
     long movesPrunedInThisGame = 0;
+    long mostPromisingMovesInThisGame = 0;
 
     final ScheduleValidator validator;
     
@@ -38,6 +41,12 @@ public class Schedule {
         freeSlotList = initFreeSlotList();
         Course.reset();
     }
+    
+//    public Schedule(List<Slot> initialState) {
+//        validator = new ScheduleValidator(this);
+//        freeSlotList = initFreeSlotList(initialState);
+//        Course.reset();
+//    }
 
     void print() {
         for (Grade g : Grade.values()) {
@@ -85,6 +94,15 @@ public class Schedule {
             }
             // valid move
             logln("Valid move: " + slot);
+            iterator.legalMovesTried++;
+            iterator.promisingMovesTried++;
+            if (mostPromisingMovesInThisGame < iterator.promisingMovesTried) {
+                mostPromisingMovesInThisGame = iterator.promisingMovesTried;
+                System.out.println(String.format("\nMost promising move so far (depth %d, slot %s):", 
+                        mostPromisingMovesInThisGame,
+                        slot.toString()));
+                print();
+            }
             // this move will be counted when we invoke recursive call
             if (enoughPeriodsPerWeek(iterator.currentCourse)) {
                 iterator.selectNextCourse();
@@ -95,8 +113,10 @@ public class Schedule {
                 return true;
             }
             // exhaustive search failed, or move took too long
+            iterator.promisingMovesTried--;
             if (!subproblemIterator.takingTooLong()) {
                 iterator.illegalMovesTried++;
+//                updateBestSeen();
             }
             retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot);
         }

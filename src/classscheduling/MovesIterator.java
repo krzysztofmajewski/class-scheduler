@@ -15,7 +15,12 @@ import java.util.List;
  */
 public class MovesIterator {
 
-    static long MOVE_THRESHOLD = 30;
+    static long MAX_DEPTH = 60;
+    
+    int depth;
+    long badMovesSeen;
+    boolean isIllegalMove;
+    
     private final Schedule schedule;
 
     private final List<Slot> remainingSlots;
@@ -55,6 +60,8 @@ public class MovesIterator {
         for (Course course : other.remainingCourses) {
             remainingCourses.add(course);
         }
+        this.depth = other.depth + 1;
+        this.badMovesSeen = other.badMovesSeen;
     }
 
     boolean notDone() {
@@ -62,7 +69,7 @@ public class MovesIterator {
     }
 
     boolean takingTooLong() {
-        return false;
+        return depth > MAX_DEPTH;
     }
 
     // returns a slot filled with a course that has not yet been tried in that slot

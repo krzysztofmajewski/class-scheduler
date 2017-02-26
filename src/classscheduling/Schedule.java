@@ -29,7 +29,10 @@ public class Schedule {
     int largestNumberOfFreeSlotsWhenBacktracking = 0;
     long movesSeenInThisGame = 0;
     long movesPrunedInThisGame = 0;
-
+    
+    double[] avgIllegalMovesAtDepth;
+    int[] samplesAtDepth;
+    
     final ScheduleValidator validator;
 
     static final boolean VERBOSE = false;
@@ -38,6 +41,8 @@ public class Schedule {
         validator = new ScheduleValidator(this);
         freeSlotList = initFreeSlotList();
         Course.reset();
+        avgIllegalMovesAtDepth = new double[60];
+        samplesAtDepth = new int[60];
     }
 
 //    public Schedule(List<Slot> initialState) {
@@ -69,6 +74,7 @@ public class Schedule {
         logprint();
         logln("");
         movesSeenInThisGame++;
+        int illegalMovesInThisLoop = 0;
         while (iterator.notDone()) {
             if (iterator.takingTooLong()) {
                 logln("taking too long");
@@ -86,6 +92,7 @@ public class Schedule {
                 iterator.retreat(slot);
                 // we have to count it here, OW it will not be counted
                 movesSeenInThisGame++;
+                iterator.isIllegalMove = true;
                 continue;
             }
             // valid move
@@ -95,20 +102,29 @@ public class Schedule {
             }
             MovesIterator subproblemIterator = new MovesIterator(iterator);
             boolean hasSolution = scheduleCourses(subproblemIterator);
+            if (subproblemIterator.isIllegalMove) {
+                illegalMovesInThisLoop++;
+            }
             if (hasSolution) {
                 return true;
             }
             // exhaustive search failed, or move took too long
+            if (!subproblemIterator.takingTooLong()) {
+                iterator.badMovesSeen++;
+            }
             retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot);
         }
+        updateAvg(illegalMovesInThisLoop, iterator.depth);
         if (freeSlots > 0) {
             if (Course.values().length == 5) {
+                iterator.isIllegalMove = true;
                 return false;
             }
         }
         // no free slots left, or else we are trying a partial schedule
         validator.validate();
         if (validator.hasErrors()) {
+            iterator.isIllegalMove = true;
             return false;
         }
         return true;
@@ -235,4 +251,10 @@ public class Schedule {
 //        System.out.println(slot);
 ////    }
 //    }
+
+    private void updateAvg(int legalMovesInThisLoop, int depth) {
+        int weight = samplesAtDepth[depth];
+        samplesAtDepth[depth] = samplesAtDepth[depth] + 1;
+        avgIllegalMovesAtDepth[depth] = (avgIllegalMovesAtDepth[depth] * (double)weight + (double)legalMovesInThisLoop) / (double) (weight+1);
+    }
 }

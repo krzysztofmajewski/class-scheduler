@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class MovesIterator {
 
-    static long MOVE_THRESHOLD = MILLION;
+    static long MOVE_THRESHOLD = 30;
     private final Schedule schedule;
 
     long illegalMovesTried;
@@ -23,6 +23,7 @@ public class MovesIterator {
     long promisingMovesTried;
     long movesTriedSinceLastMostPromisingMove;
     long movesSinceLastMostPromisingInThisSubsearch;
+    long mostPromisingMovesInThisGame;
 
     long movesPruned;
 
@@ -67,6 +68,7 @@ public class MovesIterator {
         promisingMovesTried = other.promisingMovesTried;
         legalMovesTried = other.legalMovesTried;
         movesTriedSinceLastMostPromisingMove = other.movesTriedSinceLastMostPromisingMove;
+        mostPromisingMovesInThisGame = other.mostPromisingMovesInThisGame;
     }
 
     boolean notDone() {

@@ -29,7 +29,6 @@ public class Schedule {
     int largestNumberOfFreeSlotsWhenBacktracking = 0;
     long movesSeenInThisGame = 0;
     long movesPrunedInThisGame = 0;
-    long mostPromisingMovesInThisGame = 0;
 
     final ScheduleValidator validator;
 
@@ -96,10 +95,11 @@ public class Schedule {
             logln("Valid move: " + slot);
             iterator.legalMovesTried++;
             iterator.promisingMovesTried++;
-            if (mostPromisingMovesInThisGame < iterator.promisingMovesTried) {
-                mostPromisingMovesInThisGame = iterator.promisingMovesTried;
+            // we want to save this only if we don't retreat with a hard NO
+            if (iterator.mostPromisingMovesInThisGame < iterator.promisingMovesTried) {
+                iterator.mostPromisingMovesInThisGame = iterator.promisingMovesTried;
                 System.out.println(String.format("\nMost promising move so far (depth %d, slot %s):",
-                        mostPromisingMovesInThisGame,
+                        iterator.mostPromisingMovesInThisGame,
                         slot.toString()));
                 System.out.println("Moves tried since last most promising move in this subsearch: " + iterator.movesSinceLastMostPromisingInThisSubsearch);
                 print();
@@ -112,14 +112,17 @@ public class Schedule {
             }
             MovesIterator subproblemIterator = new MovesIterator(iterator);
             boolean hasSolution = scheduleCourses(subproblemIterator);
-            iterator.movesSinceLastMostPromisingInThisSubsearch += subproblemIterator.movesSinceLastMostPromisingInThisSubsearch;
             if (hasSolution) {
                 return true;
             }
             // exhaustive search failed, or move took too long
-            iterator.promisingMovesTried--;
-            if (!subproblemIterator.takingTooLong()) {
+            if (subproblemIterator.takingTooLong()) {
+                iterator.mostPromisingMovesInThisGame = subproblemIterator.mostPromisingMovesInThisGame;
+            } else {
+                iterator.promisingMovesTried--;
                 iterator.illegalMovesTried++;
+                // don't count the pruned moves, otherwise we bail out too impatiently once we start pruning
+                iterator.movesSinceLastMostPromisingInThisSubsearch += subproblemIterator.movesSinceLastMostPromisingInThisSubsearch;
 //                updateBestSeen();
             }
             retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot);

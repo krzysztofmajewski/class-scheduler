@@ -69,8 +69,6 @@ public class Schedule {
         logprint();
         logln("");
         movesSeenInThisGame++;
-        iterator.movesTriedSinceLastMostPromisingMove++;
-        iterator.movesSinceLastMostPromisingInThisSubsearch++;
         while (iterator.notDone()) {
             if (iterator.takingTooLong()) {
                 logln("taking too long");
@@ -84,7 +82,6 @@ public class Schedule {
             validator.validateCorrectnessConstraints(slot);
             if (validator.hasErrors()) {
                 // no solution from this move, try another slot
-                iterator.illegalMovesTried++;
                 logln("This move turned out to be illegal: " + slot);
                 iterator.retreat(slot);
                 // we have to count it here, OW it will not be counted
@@ -93,20 +90,6 @@ public class Schedule {
             }
             // valid move
             logln("Valid move: " + slot);
-            iterator.legalMovesTried++;
-            iterator.promisingMovesTried++;
-            // we want to save this only if we don't retreat with a hard NO
-            if (iterator.mostPromisingMovesInThisGame < iterator.promisingMovesTried) {
-                iterator.mostPromisingMovesInThisGame = iterator.promisingMovesTried;
-                System.out.println(String.format("\nMost promising move so far (depth %d, slot %s):",
-                        iterator.mostPromisingMovesInThisGame,
-                        slot.toString()));
-                System.out.println("Moves tried since last most promising move in this subsearch: " + iterator.movesSinceLastMostPromisingInThisSubsearch);
-                print();
-                iterator.movesTriedSinceLastMostPromisingMove = 0;
-                iterator.movesSinceLastMostPromisingInThisSubsearch = 0;
-            }
-            // this move will be counted when we invoke recursive call
             if (enoughPeriodsPerWeek(iterator.currentCourse)) {
                 iterator.selectNextCourse();
             }
@@ -116,15 +99,6 @@ public class Schedule {
                 return true;
             }
             // exhaustive search failed, or move took too long
-            if (subproblemIterator.takingTooLong()) {
-                iterator.mostPromisingMovesInThisGame = subproblemIterator.mostPromisingMovesInThisGame;
-            } else {
-                iterator.promisingMovesTried--;
-                iterator.illegalMovesTried++;
-                // don't count the pruned moves, otherwise we bail out too impatiently once we start pruning
-                iterator.movesSinceLastMostPromisingInThisSubsearch += subproblemIterator.movesSinceLastMostPromisingInThisSubsearch;
-//                updateBestSeen();
-            }
             retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot);
         }
         if (freeSlots > 0) {
@@ -135,7 +109,6 @@ public class Schedule {
         // no free slots left, or else we are trying a partial schedule
         validator.validate();
         if (validator.hasErrors()) {
-            iterator.illegalMovesTried++;
             return false;
         }
         return true;

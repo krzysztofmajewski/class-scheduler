@@ -18,15 +18,6 @@ public class MovesIterator {
     static long MOVE_THRESHOLD = 30;
     private final Schedule schedule;
 
-    long illegalMovesTried;
-    long legalMovesTried;
-    long promisingMovesTried;
-    long movesTriedSinceLastMostPromisingMove;
-    long movesSinceLastMostPromisingInThisSubsearch;
-    long mostPromisingMovesInThisGame;
-
-    long movesPruned;
-
     private final List<Slot> remainingSlots;
 
     private final List<Course> remainingCourses;
@@ -64,11 +55,6 @@ public class MovesIterator {
         for (Course course : other.remainingCourses) {
             remainingCourses.add(course);
         }
-        illegalMovesTried = other.illegalMovesTried;
-        promisingMovesTried = other.promisingMovesTried;
-        legalMovesTried = other.legalMovesTried;
-        movesTriedSinceLastMostPromisingMove = other.movesTriedSinceLastMostPromisingMove;
-        mostPromisingMovesInThisGame = other.mostPromisingMovesInThisGame;
     }
 
     boolean notDone() {
@@ -76,7 +62,7 @@ public class MovesIterator {
     }
 
     boolean takingTooLong() {
-        return movesSinceLastMostPromisingInThisSubsearch >= MOVE_THRESHOLD;
+        return false;
     }
 
     // returns a slot filled with a course that has not yet been tried in that slot

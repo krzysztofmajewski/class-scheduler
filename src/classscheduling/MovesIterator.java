@@ -17,7 +17,7 @@ public class MovesIterator {
 
     static long MAX_DEPTH = 60;
     
-    int depth;
+    final int depth;
     long badMovesSeen;
     boolean isIllegalMove;
     
@@ -28,9 +28,9 @@ public class MovesIterator {
     private final List<Course> remainingCourses;
 
     private Slot nextSlotToTry;
-
+    
     Course currentCourse;
-
+    
     public MovesIterator(Schedule schedule, Course currentCourse) {
         this.schedule = schedule;
         remainingSlots = new ArrayList<>();
@@ -46,22 +46,23 @@ public class MovesIterator {
             }
             remainingCourses.add(course);
         }
+        depth = 0;
     }
 
-    public MovesIterator(MovesIterator other) {
-        schedule = other.schedule;
+    public MovesIterator(MovesIterator parent) {
+        schedule = parent.schedule;
         remainingSlots = new ArrayList<>();
         for (Slot slot : schedule.freeSlotList) {
             remainingSlots.add(slot);
         }
-        currentCourse = other.currentCourse;
-        nextSlotToTry = other.nextSlotToTry;
+        currentCourse = parent.currentCourse;
+        nextSlotToTry = parent.nextSlotToTry;
         remainingCourses = new ArrayList<>();
-        for (Course course : other.remainingCourses) {
+        for (Course course : parent.remainingCourses) {
             remainingCourses.add(course);
         }
-        this.depth = other.depth + 1;
-        this.badMovesSeen = other.badMovesSeen;
+        this.depth = parent.depth + 1;
+        this.badMovesSeen = parent.badMovesSeen;
     }
 
     boolean notDone() {
@@ -120,4 +121,9 @@ public class MovesIterator {
 //    static void increaseThreshold() {
 //        BAD_MOVE_THRESHOLD *= 2;
 //    }
+
+    void markMoveAsIllegal() throws SanityCheckException {
+        isIllegalMove = true;
+        schedule.hopelessPartialSchedules.addThisPartialSchedule(depth);
+    }
 }

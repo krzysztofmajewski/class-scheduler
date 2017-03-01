@@ -23,9 +23,11 @@ public class Schedule {
 
 //    final List<Slot> bestStateSeenSoFar;
     int freeSlots = 60;
+    int smallestNumberOfFreeSlots = 60;
     int largestNumberOfFreeSlotsWhenBacktracking = 0;
     long movesSeenInThisGame = 0;
     long movesPrunedInThisGame = 0;
+    long movesFailedVetting = 0;
 
     double[] avgIllegalMovesAtDepth;
     int[] samplesAtDepth;
@@ -74,7 +76,6 @@ public class Schedule {
         logprint();
         logln("");
         movesSeenInThisGame++;
-        int illegalMovesInThisLoop = 0;
         while (iterator.notDone()) {
             if (iterator.takingTooLong()) {
                 logln("taking too long");
@@ -97,19 +98,28 @@ public class Schedule {
             // valid move
             // TODO optimize
             if (hopelessPartialSchedules.vettingFailed(iterator.depth)) {
+                movesFailedVetting++;
                 iterator.markMoveAsIllegal();
                 iterator.retreat(slot);
                 continue;
             }
             logln("Valid move: " + slot);
+            if (freeSlots < smallestNumberOfFreeSlots) {
+                smallestNumberOfFreeSlots = freeSlots;
+                System.out.println("Best move so far: " + slot);
+                System.out.println(freeSlots + " free slots left");
+                print();
+                System.out.println();
+                validator.validate();
+                if (validator.hasNoErrors()) {
+                    return true;
+                }
+            }
             if (enoughPeriodsPerWeek(iterator.currentCourse)) {
                 iterator.selectNextCourse();
             }
             MovesIterator subproblemIterator = new MovesIterator(iterator);
             boolean hasSolution = scheduleCourses(subproblemIterator);
-            if (subproblemIterator.isIllegalMove) {
-                illegalMovesInThisLoop++;
-            }
             if (hasSolution) {
                 return true;
             }
@@ -119,7 +129,6 @@ public class Schedule {
             }
             retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot);
         }
-        updateAvg(illegalMovesInThisLoop, iterator.depth);
         if (freeSlots > 0) {
             if (Course.values().length == 5) {
                 iterator.markMoveAsIllegal();
@@ -152,6 +161,7 @@ public class Schedule {
             System.out.println(freeSlots + " free slots");
             System.out.println(movesSeenInThisGame + " moves seen in this game");
             System.out.println(movesPrunedInThisGame + " moves pruned in this game");
+            System.out.println(movesFailedVetting + " moves failed vetting in this game");
             print();
             if (iterator.currentCourse == null) {
                 System.out.println("This iterator has attempted all of its moves");

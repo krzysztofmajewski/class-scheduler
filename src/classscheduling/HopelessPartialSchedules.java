@@ -13,6 +13,8 @@ import java.util.Iterator;
  * @author krzys
  */
 public class HopelessPartialSchedules {
+    
+    private static final int MAX_ENTRIES = 1000;
 
     private final Schedule schedule;
 
@@ -27,50 +29,60 @@ public class HopelessPartialSchedules {
     // TODO remove sanity checks
     void addThisPartialSchedule(int depth) throws SanityCheckException {
         BoardState bs = new BoardState(schedule.freeSlotList, depth);
-        int index = find(bs);
-        if (index >= 0) {
-            boardStates.add(index, bs);
+        BoardState bsOrSuperPatternThereof = findAndPurgeSuperPatternsIfAny(bs);
+        if ((bsOrSuperPatternThereof == null) || (bsOrSuperPatternThereof.depth > bs.depth)) {
+            add(bs);
         }
     }
 
-    int find(BoardState bs) throws SanityCheckException {
-        boolean found = false;
-        int index = 0;
+    BoardState findAndPurgeSuperPatternsIfAny(BoardState bs) throws SanityCheckException {
+        BoardState result = null;
         Iterator<BoardState> iterator = boardStates.iterator();
         while (iterator.hasNext()) {
             BoardState state = iterator.next();
-            index++;
             if (state.depth < bs.depth) {
                 if (state.isSubPatternOf(bs)) {
-                    // existential question
-                    throw new SanityCheckException("Why are we here?");
+                    state.hits++;
+                    result = state;
+                    break;
                 }
             } else if (state.depth == bs.depth) {
                 if (state.equals(bs)) {
                     // we already found this state once before
-                    found = true;
                     state.hits++;
+                    result = bs;
                     break;
                 }
                 // keep going
             } else {
                 // state.depth > depth
-                // remove up redundant entries
+                // remove redundant entries
                 if (bs.isSubPatternOf(state)) {
-                    found = true;
+                    bs.hits++;
+                    result = state;
                     iterator.remove();
                 }
             }
         }
-        if (found) {
-            return index;
-        } else {
-            return -1;
-        }
+        return result;
     }
 
     boolean vettingFailed(int depth) throws SanityCheckException {
         BoardState bs = new BoardState(schedule.freeSlotList, depth);
-        return (find(bs) >= 0);
+        return (findAndPurgeSuperPatternsIfAny(bs) != null);
+    }
+
+    private void add(BoardState bs) {
+        if (boardStates.size() >= MAX_ENTRIES) {
+            return;
+        }
+        int index = 0;
+        for (BoardState state : boardStates) {
+            index++;
+            if (state.depth >= bs.depth) {
+                break;
+            }
+        }
+        boardStates.add(index, bs);
     }
 }

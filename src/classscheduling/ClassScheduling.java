@@ -42,7 +42,7 @@ public class ClassScheduling {
         do {
             iterations++;
             example = exampleSchedule();
-            iterator = new MovesIterator(example, Course.MATH);
+            iterator = new MovesIterator(example, Course.MATH, 1);
             result = example.scheduleCourses(iterator);
             if (result) {
                 break;

@@ -19,7 +19,6 @@ public class MovesIterator {
     
     final int depth;
     long badMovesSeen;
-    boolean isIllegalMove;
     
     private final Schedule schedule;
 
@@ -31,7 +30,7 @@ public class MovesIterator {
     
     Course currentCourse;
     
-    public MovesIterator(Schedule schedule, Course currentCourse) {
+    public MovesIterator(Schedule schedule, Course currentCourse, int depth) {
         this.schedule = schedule;
         remainingSlots = new ArrayList<>();
         for (Slot slot : schedule.freeSlotList) {
@@ -46,7 +45,7 @@ public class MovesIterator {
             }
             remainingCourses.add(course);
         }
-        depth = 0;
+        this.depth = depth;
     }
 
     public MovesIterator(MovesIterator parent) {
@@ -123,7 +122,6 @@ public class MovesIterator {
 //    }
 
     void markMoveAsIllegal() throws SanityCheckException {
-        isIllegalMove = true;
         schedule.hopelessPartialSchedules.addThisPartialSchedule(depth);
     }
 }

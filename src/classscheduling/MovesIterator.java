@@ -117,11 +117,7 @@ public class MovesIterator {
         return remainingSlots.get(0);
     }
 
-//    static void increaseThreshold() {
-//        BAD_MOVE_THRESHOLD *= 2;
+//    void markMoveAsIllegal() throws SanityCheckException {
+//        schedule.hopelessPartialSchedules.addThisPartialSchedule(depth);
 //    }
-
-    void markMoveAsIllegal() throws SanityCheckException {
-        schedule.hopelessPartialSchedules.addThisPartialSchedule(depth);
-    }
 }

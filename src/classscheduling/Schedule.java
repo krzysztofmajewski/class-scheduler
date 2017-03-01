@@ -77,12 +77,12 @@ public class Schedule {
         logln("");
         movesSeenInThisGame++;
         while (iterator.notDone()) {
-            if (iterator.takingTooLong()) {
-                logln("taking too long");
-                logprint();
-                movesPrunedInThisGame++;
-                return false;
-            }
+//            if (iterator.takingTooLong()) {
+//                logln("taking too long");
+//                logprint();
+//                movesPrunedInThisGame++;
+//                return false;
+//            }
             Slot slot = (Slot) iterator.move();
             // check for correctness of current schedule
             validator.reset();
@@ -91,18 +91,18 @@ public class Schedule {
                 // no solution from this move, try another slot
                 logln("This move turned out to be illegal: " + slot);
                 movesSeenInThisGame++;
-                iterator.markMoveAsIllegal();
+//                iterator.markMoveAsIllegal();
                 iterator.retreat(slot);
                 continue;
             }
             // valid move
             // TODO optimize
-            if (hopelessPartialSchedules.vettingFailed(iterator.depth)) {
-                movesFailedVetting++;
-                iterator.markMoveAsIllegal();
-                iterator.retreat(slot);
-                continue;
-            }
+//            if (hopelessPartialSchedules.vettingFailed(iterator.depth)) {
+//                movesFailedVetting++;
+//                iterator.markMoveAsIllegal();
+//                iterator.retreat(slot);
+//                continue;
+//            }
             logln("Valid move: " + slot);
             if (freeSlots < smallestNumberOfFreeSlots) {
                 smallestNumberOfFreeSlots = freeSlots;
@@ -110,9 +110,13 @@ public class Schedule {
                 System.out.println(freeSlots + " free slots left");
                 print();
                 System.out.println();
-                validator.validate();
-                if (validator.hasNoErrors()) {
-                    return true;
+                if (freeSlots == 0) {
+                    validator.validate();
+                    if (validator.hasNoErrors()) {
+                        return true;
+                    } else {
+                        throw new SanityCheckException("If this move is no good, why am I here?");
+                    }
                 }
             }
             if (enoughPeriodsPerWeek(iterator.currentCourse)) {
@@ -124,19 +128,19 @@ public class Schedule {
                 return true;
             }
             // exhaustive search failed, or move took too long
-            if (!subproblemIterator.takingTooLong()) {
+//            if (!subproblemIterator.takingTooLong()) {
                 iterator.badMovesSeen++;
-            }
+//            }
             retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot);
         }
         if (freeSlots > 0) {
-            iterator.markMoveAsIllegal();
+            // tried all possible moves, did not find solution
+//            iterator.markMoveAsIllegal();
             return false;
         }
-        // no free slots left, or else we are trying a partial schedule
         validator.validate();
         if (validator.hasErrors()) {
-            iterator.markMoveAsIllegal();
+//            iterator.markMoveAsIllegal();
             return false;
         }
         return true;
@@ -158,8 +162,8 @@ public class Schedule {
             }
             System.out.println(freeSlots + " free slots");
             System.out.println(movesSeenInThisGame + " moves seen in this game");
-            System.out.println(movesPrunedInThisGame + " moves pruned in this game");
-            System.out.println(movesFailedVetting + " moves failed vetting in this game");
+//            System.out.println(movesPrunedInThisGame + " moves pruned in this game");
+//            System.out.println(movesFailedVetting + " moves failed vetting in this game");
             print();
             if (iterator.currentCourse == null) {
                 System.out.println("This iterator has attempted all of its moves");

@@ -117,7 +117,7 @@ public class MovesIterator {
         return remainingSlots.get(0);
     }
 
-//    void markMoveAsIllegal() throws SanityCheckException {
-//        schedule.hopelessPartialSchedules.addThisPartialSchedule(depth);
-//    }
+    void markMoveAsIllegal() throws SanityCheckException {
+        schedule.hopelessPartialSchedules.addThisPartialSchedule(depth);
+    }
 }

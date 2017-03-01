@@ -21,7 +21,6 @@ public class Schedule {
 
     final List<Slot> freeSlotList;
 
-//    final List<Slot> bestStateSeenSoFar;
     int freeSlots = 60;
     int smallestNumberOfFreeSlots = 60;
     int largestNumberOfFreeSlotsWhenBacktracking = 0;
@@ -47,11 +46,6 @@ public class Schedule {
         hopelessPartialSchedules = new HopelessPartialSchedules(this);
     }
 
-//    public Schedule(List<Slot> initialState) {
-//        validator = new ScheduleValidator(this);
-//        freeSlotList = initFreeSlotList(initialState);
-//        Course.reset();
-//    }
     void print() {
         for (Grade g : Grade.values()) {
             System.out.printf("%10s", g.name() + " |");
@@ -77,12 +71,6 @@ public class Schedule {
         logln("");
         movesSeenInThisGame++;
         while (iterator.notDone()) {
-//            if (iterator.takingTooLong()) {
-//                logln("taking too long");
-//                logprint();
-//                movesPrunedInThisGame++;
-//                return false;
-//            }
             Slot slot = (Slot) iterator.move();
             // check for correctness of current schedule
             validator.reset();
@@ -91,18 +79,18 @@ public class Schedule {
                 // no solution from this move, try another slot
                 logln("This move turned out to be illegal: " + slot);
                 movesSeenInThisGame++;
-//                iterator.markMoveAsIllegal();
+                iterator.markMoveAsIllegal();
                 iterator.retreat(slot);
                 continue;
             }
             // valid move
             // TODO optimize
-//            if (hopelessPartialSchedules.vettingFailed(iterator.depth)) {
-//                movesFailedVetting++;
-//                iterator.markMoveAsIllegal();
-//                iterator.retreat(slot);
-//                continue;
-//            }
+            if (hopelessPartialSchedules.vettingFailed(iterator.depth)) {
+                movesFailedVetting++;
+                iterator.markMoveAsIllegal();
+                iterator.retreat(slot);
+                continue;
+            }
             logln("Valid move: " + slot);
             if (freeSlots < smallestNumberOfFreeSlots) {
                 smallestNumberOfFreeSlots = freeSlots;
@@ -127,21 +115,20 @@ public class Schedule {
             if (hasSolution) {
                 return true;
             }
-            // exhaustive search failed, or move took too long
-//            if (!subproblemIterator.takingTooLong()) {
-                iterator.badMovesSeen++;
-//            }
+            iterator.badMovesSeen++;
             retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot);
         }
         if (freeSlots > 0) {
             // tried all possible moves, did not find solution
-//            iterator.markMoveAsIllegal();
+            iterator.markMoveAsIllegal();
             return false;
         }
+        // zero free slots left
         validator.validate();
         if (validator.hasErrors()) {
+            throw new SanityCheckException("Is this situation possible?");
 //            iterator.markMoveAsIllegal();
-            return false;
+//            return false;
         }
         return true;
     }
@@ -163,7 +150,7 @@ public class Schedule {
             System.out.println(freeSlots + " free slots");
             System.out.println(movesSeenInThisGame + " moves seen in this game");
 //            System.out.println(movesPrunedInThisGame + " moves pruned in this game");
-//            System.out.println(movesFailedVetting + " moves failed vetting in this game");
+            System.out.println(movesFailedVetting + " moves failed vetting in this game");
             print();
             if (iterator.currentCourse == null) {
                 System.out.println("This iterator has attempted all of its moves");

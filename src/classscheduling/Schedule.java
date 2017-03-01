@@ -130,10 +130,8 @@ public class Schedule {
             retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot);
         }
         if (freeSlots > 0) {
-            if (Course.values().length == 5) {
-                iterator.markMoveAsIllegal();
-                return false;
-            }
+            iterator.markMoveAsIllegal();
+            return false;
         }
         // no free slots left, or else we are trying a partial schedule
         validator.validate();

@@ -5,6 +5,7 @@
  */
 package classscheduling;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -32,6 +33,27 @@ class BoardState {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object aThat) {
+        if (this == aThat) {
+            return true;
+        }
+        if (!(aThat instanceof BoardState)) {
+            return false;
+        }
+        BoardState that = (BoardState) aThat;
+        return (that.depth == this.depth)
+                && Arrays.equals(that.board, this.board);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+//        hash = 97 * hash + this.depth;
+        hash = 97 * hash + Arrays.hashCode(this.board);
+        return hash;
     }
 
     boolean isSubPatternOf(BoardState bs) {

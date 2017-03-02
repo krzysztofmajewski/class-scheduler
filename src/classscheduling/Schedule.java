@@ -35,8 +35,6 @@ public class Schedule {
 
     final ScheduleValidator validator;
 
-    static final boolean VERBOSE = false;
-
     public Schedule() {
         validator = new ScheduleValidator(this);
         freeSlotList = initFreeSlotList();
@@ -65,11 +63,12 @@ public class Schedule {
 
     // returns true if it finds a solution
     boolean scheduleCourses(MovesIterator iterator) throws SanityCheckException {
-        logln("moves seen so far in this game: " + movesSeenInThisGame);
-        logln("moves pruned so far in this game: " + movesPrunedInThisGame);
-        logprint();
-        logln("");
         movesSeenInThisGame++;
+        boolean knownBadMove = !hopelessPartialSchedules.vetThisMove(iterator.depth);
+        if (knownBadMove) {
+            movesFailedVetting++;
+            return false;
+        }
         while (iterator.notDone()) {
             Slot slot = (Slot) iterator.move();
             // check for correctness of current schedule
@@ -77,21 +76,18 @@ public class Schedule {
             validator.validateCorrectnessConstraints(slot);
             if (validator.hasErrors()) {
                 // no solution from this move, try another slot
-                logln("This move turned out to be illegal: " + slot);
                 movesSeenInThisGame++;
-                iterator.markMoveAsIllegal();
+//                iterator.markMoveAsIllegal();
                 iterator.retreat(slot);
                 continue;
             }
             // valid move
-            // TODO optimize
-            if (hopelessPartialSchedules.vettingFailed(iterator.depth)) {
+            boolean vetted = hopelessPartialSchedules.vetThisMove(iterator.depth);
+            if (!vetted) {
                 movesFailedVetting++;
-                iterator.markMoveAsIllegal();
                 iterator.retreat(slot);
                 continue;
             }
-            logln("Valid move: " + slot);
             if (freeSlots < smallestNumberOfFreeSlots) {
                 smallestNumberOfFreeSlots = freeSlots;
                 System.out.println("Best move so far: " + slot);
@@ -133,7 +129,8 @@ public class Schedule {
         return true;
     }
 
-    void retreatAndPrintInfoIfNeeded(MovesIterator iterator, MovesIterator subproblemIterator, Slot slot) throws SanityCheckException {
+    void retreatAndPrintInfoIfNeeded(MovesIterator iterator, MovesIterator subproblemIterator,
+            Slot slot) throws SanityCheckException {
         boolean printInfo = false;
         if (freeSlots > largestNumberOfFreeSlotsWhenBacktracking) {
             largestNumberOfFreeSlotsWhenBacktracking = freeSlots;
@@ -224,23 +221,6 @@ public class Schedule {
         return slot;
     }
 
-    void logln(String message) {
-        if (VERBOSE) {
-            System.out.println(message);
-        }
-    }
-
-    void log(String message) {
-        if (VERBOSE) {
-            System.out.print(message);
-        }
-    }
-
-    void logprint() {
-        if (VERBOSE) {
-            print();
-        }
-    }
 //    private void printProgress(Slot slot, Course course, MovesIterator iterator) {
 //        // print a status update every once in a while
 ////        if ((movesTried % MILLION) == 1) {
@@ -256,9 +236,9 @@ public class Schedule {
 ////    }
 //    }
 
-    private void updateAvg(int legalMovesInThisLoop, int depth) {
-        int weight = samplesAtDepth[depth];
-        samplesAtDepth[depth] = samplesAtDepth[depth] + 1;
-        avgIllegalMovesAtDepth[depth] = (avgIllegalMovesAtDepth[depth] * (double) weight + (double) legalMovesInThisLoop) / (double) (weight + 1);
-    }
+//    private void updateAvg(int legalMovesInThisLoop, int depth) {
+//        int weight = samplesAtDepth[depth];
+//        samplesAtDepth[depth] = samplesAtDepth[depth] + 1;
+//        avgIllegalMovesAtDepth[depth] = (avgIllegalMovesAtDepth[depth] * (double) weight + (double) legalMovesInThisLoop) / (double) (weight + 1);
+//    }
 }

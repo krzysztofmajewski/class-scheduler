@@ -13,10 +13,13 @@ import java.util.Iterator;
  * @author krzys
  */
 public class HopelessPartialSchedules {
-    
+
     private static final int MAX_ENTRIES = 1000;
 
     private final Schedule schedule;
+    
+    int numAdded;
+    int numPurged;
 
     // TODO optimize
     private final ArrayList<BoardState> boardStates;
@@ -29,13 +32,15 @@ public class HopelessPartialSchedules {
     // TODO remove sanity checks
     void addThisPartialSchedule(int depth) throws SanityCheckException {
         BoardState bs = new BoardState(schedule.freeSlotList, depth);
-        BoardState bsOrSuperPatternThereof = findAndPurgeSuperPatternsIfAny(bs);
-        if ((bsOrSuperPatternThereof == null) || (bsOrSuperPatternThereof.depth > bs.depth)) {
-            add(bs);
+        BoardState found = find(bs);
+        if (found != null) {
+            throw new SanityCheckException("Check this out.");
         }
+        purgeSuperPatterns(bs);
+        add(bs);
     }
 
-    BoardState findAndPurgeSuperPatternsIfAny(BoardState bs) throws SanityCheckException {
+    BoardState find(BoardState bs) throws SanityCheckException {
         BoardState result = null;
         Iterator<BoardState> iterator = boardStates.iterator();
         while (iterator.hasNext()) {
@@ -50,26 +55,24 @@ public class HopelessPartialSchedules {
                 if (state.equals(bs)) {
                     // we already found this state once before
                     state.hits++;
-                    result = bs;
+                    result = state;
                     break;
                 }
-                // keep going
             } else {
-                // state.depth > depth
-                // remove redundant entries
-                if (bs.isSubPatternOf(state)) {
-                    bs.hits++;
-                    result = state;
-                    iterator.remove();
-                }
+                // state.depth > bs.depth
+                // we don't care if a superpattern is bad
+                break;
             }
         }
         return result;
     }
 
-    boolean vettingFailed(int depth) throws SanityCheckException {
+    // Returns false if any one of these is in boardStates:
+    //   this exact board state
+    //   a board state that is a subpattern of this board state
+    boolean vetThisMove(int depth) throws SanityCheckException {
         BoardState bs = new BoardState(schedule.freeSlotList, depth);
-        return (findAndPurgeSuperPatternsIfAny(bs) != null);
+        return (find(bs) == null);
     }
 
     private void add(BoardState bs) {
@@ -84,5 +87,19 @@ public class HopelessPartialSchedules {
             }
         }
         boardStates.add(index, bs);
+        numAdded++;
+    }
+
+    private void purgeSuperPatterns(BoardState bs) {
+        Iterator<BoardState> iterator = boardStates.iterator();
+        while (iterator.hasNext()) {
+            BoardState state = iterator.next();
+            if (state.depth > bs.depth) {
+                if (bs.isSubPatternOf(state)) {
+                    numPurged++;
+                    iterator.remove();
+                }
+            }
+        }
     }
 }

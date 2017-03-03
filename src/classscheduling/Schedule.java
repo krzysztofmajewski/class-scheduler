@@ -123,8 +123,6 @@ public class Schedule {
         validator.validate();
         if (validator.hasErrors()) {
             throw new SanityCheckException("Is this situation possible?");
-//            iterator.markMoveAsIllegal();
-//            return false;
         }
         return true;
     }

@@ -71,6 +71,7 @@ public class Schedule {
         }
         while (iterator.notDone()) {
             Slot slot = (Slot) iterator.move();
+            // TODO: should we vet first, then check correctness?
             // check for correctness of current schedule
             validator.reset();
             validator.validateCorrectnessConstraints(slot);

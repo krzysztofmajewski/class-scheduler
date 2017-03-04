@@ -17,51 +17,57 @@ public class HopelessPartialSchedules {
     private static final int MAX_ENTRIES = 1000;
 
     private final Schedule schedule;
-    
+
     int numAdded;
     int numPurged;
+    int numElements;
 
-    // TODO optimize
-    private final ArrayList<BoardState> boardStates;
+    private final Object boardStates[];
 
     public HopelessPartialSchedules(Schedule schedule) {
         this.schedule = schedule;
-        boardStates = new ArrayList<>();
+        // depth 1..60
+        boardStates = new Object[61];
     }
 
-    // TODO remove sanity checks
-    void addThisPartialSchedule(int depth) throws SanityCheckException {
+    void addThisPartialSchedule(int depth) {
         BoardState bs = new BoardState(schedule.freeSlotList, depth);
-        BoardState found = find(bs);
-        if (found != null) {
-            throw new SanityCheckException("Check this out.");
-        }
         purgeSuperPatterns(bs);
         add(bs);
     }
 
-    BoardState find(BoardState bs) throws SanityCheckException {
+    BoardState find(BoardState bs) {
         BoardState result = null;
-        Iterator<BoardState> iterator = boardStates.iterator();
-        while (iterator.hasNext()) {
-            BoardState state = iterator.next();
-            if (state.depth < bs.depth) {
-                if (state.isSubPatternOf(bs)) {
-                    state.hits++;
-                    result = state;
-                    break;
-                }
-            } else if (state.depth == bs.depth) {
-                if (state.equals(bs)) {
-                    // we already found this state once before
-                    state.hits++;
-                    result = state;
-                    break;
-                }
-            } else {
-                // state.depth > bs.depth
-                // we don't care if a superpattern is bad
+        int depthIndex = 1;
+        if (bs.depth > 1) {
+            depthIndex = bs.depth - 1;
+        }
+        for (; depthIndex <= bs.depth; depthIndex++) {
+            if (result != null) {
                 break;
+            }
+            ArrayList<BoardState> depthList = (ArrayList<BoardState>) boardStates[depthIndex];
+            if ((depthList != null) && (!depthList.isEmpty())) {
+                if (depthIndex < bs.depth) {
+                    // check for subpatterns of bs
+                    for (BoardState state : depthList) {
+                        if (state.isSubPatternOf(bs)) {
+                            state.hits++;
+                            result = state;
+                            break;
+                        }
+                    }
+                } else if (depthIndex == bs.depth) {
+                    // check if bs already in here
+                    for (BoardState state : depthList) {
+                        if (state.equals(bs)) {
+                            // we already found this state once before
+                            state.hits++;
+                            result = state;
+                            break;
+                        }
+                    }
+                }
             }
         }
         return result;
@@ -70,34 +76,40 @@ public class HopelessPartialSchedules {
     // Returns false if any one of these is in boardStates:
     //   this exact board state
     //   a board state that is a subpattern of this board state
-    boolean vetThisMove(int depth) throws SanityCheckException {
+    boolean vetThisMove(int depth) {
         BoardState bs = new BoardState(schedule.freeSlotList, depth);
         return (find(bs) == null);
     }
 
     private void add(BoardState bs) {
-        if (boardStates.size() >= MAX_ENTRIES) {
+        // TODO: does this ever happen? should we shake things up when it does?
+        if (numElements >= MAX_ENTRIES) {
             return;
         }
-        int index = 0;
-        for (BoardState state : boardStates) {
-            index++;
-            if (state.depth >= bs.depth) {
-                break;
-            }
+        ArrayList<BoardState> depthList = (ArrayList<BoardState>) boardStates[bs.depth];
+        if (depthList == null) {
+            // TODO optimize initial capacity?
+            depthList = new ArrayList<>();
+            boardStates[bs.depth] = depthList;
         }
-        boardStates.add(index, bs);
+        depthList.add(bs);
         numAdded++;
+        numElements++;
     }
 
     private void purgeSuperPatterns(BoardState bs) {
-        Iterator<BoardState> iterator = boardStates.iterator();
-        while (iterator.hasNext()) {
-            BoardState state = iterator.next();
-            if (state.depth > bs.depth) {
+        for (int depthIndex = bs.depth + 1; depthIndex <= 60; depthIndex++) {
+            ArrayList<BoardState> depthList = (ArrayList<BoardState>) boardStates[depthIndex];
+            if ((depthList == null) || (depthList.isEmpty())) {
+                continue;
+            }
+            Iterator<BoardState> iterator = depthList.iterator();
+            while (iterator.hasNext()) {
+                BoardState state = iterator.next();
                 if (bs.isSubPatternOf(state)) {
-                    numPurged++;
                     iterator.remove();
+                    numPurged++;
+                    numElements--;
                 }
             }
         }

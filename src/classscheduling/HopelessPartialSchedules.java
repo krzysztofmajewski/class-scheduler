@@ -38,11 +38,7 @@ public class HopelessPartialSchedules {
 
     BoardState find(BoardState bs) {
         BoardState result = null;
-        int depthIndex = 1;
-        if (bs.depth > 1) {
-            depthIndex = bs.depth - 1;
-        }
-        for (; depthIndex <= bs.depth; depthIndex++) {
+        for (int depthIndex=1; depthIndex <= bs.depth; depthIndex++) {
             if (result != null) {
                 break;
             }

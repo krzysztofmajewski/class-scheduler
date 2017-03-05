@@ -78,6 +78,10 @@ public class ClassScheduling {
         example.validator.validate();
         // this should not print anything in case of success
         example.validator.printErrors();
+        System.out.println(example.movesSeenInThisGame + " moves seen in this game");
+        System.out.println(example.movesFailedVetting + " moves failed vetting in this game");
+        System.out.println(example.hopelessPartialSchedules.numAdded + " partial schedules added to lookup table");
+        System.out.println(example.hopelessPartialSchedules.numElements + " partial schedules remaining in lookup table");
     }
 
     private static Schedule exampleSchedule() throws Exception {

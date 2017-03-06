@@ -7,7 +7,11 @@ package classscheduling;
 
 import static classscheduling.Course.MATH;
 import static classscheduling.Day.MONDAY;
+import static classscheduling.Grade.EIGHT;
 import static classscheduling.Grade.NINE;
+import static classscheduling.Grade.SEVEN;
+import static classscheduling.Period.FIRST;
+import static classscheduling.Period.FOURTH;
 import static classscheduling.Period.SECOND;
 
 /**
@@ -42,7 +46,7 @@ public class ClassScheduling {
         do {
             iterations++;
             example = exampleSchedule();
-            iterator = new MovesIterator(example, Course.MATH, 1);
+            iterator = new MovesIterator(example, Course.MATH, 3);
             result = example.scheduleCourses(iterator);
             if (result) {
                 break;
@@ -87,8 +91,8 @@ public class ClassScheduling {
     private static Schedule exampleSchedule() throws Exception {
         Schedule schedule = new Schedule();
 
-//        schedule.set(MONDAY, SEVEN, FIRST, MATH);
-//        schedule.set(MONDAY, EIGHT, FOURTH, MATH);
+        schedule.set(MONDAY, SEVEN, FIRST, MATH);
+        schedule.set(MONDAY, EIGHT, FOURTH, MATH);
         schedule.set(MONDAY, NINE, SECOND, MATH);
 
         return schedule;

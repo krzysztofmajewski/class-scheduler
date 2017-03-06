@@ -18,6 +18,12 @@ class BoardState {
     char board[];
     int hits;
 
+    // pointer to least recently added element with depth > this.depth, if any
+    BoardState next;
+    
+    // pointer to most recently added element with depth <= this.depth, if any
+    BoardState prev;
+
     public BoardState(List<Slot> freeSlotList, int depth) {
         board = new char[60];
         this.depth = depth;

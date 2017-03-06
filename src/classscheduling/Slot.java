@@ -5,8 +5,6 @@
  */
 package classscheduling;
 
-import java.util.Objects;
-
 /**
  *
  * @author krzys

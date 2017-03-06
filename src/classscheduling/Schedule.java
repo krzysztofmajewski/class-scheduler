@@ -138,11 +138,7 @@ public class Schedule {
         }
         iterator.retreat(slot);
         if (printInfo) {
-            if (subproblemIterator.takingTooLong()) {
-                System.out.print("Retreated from slow move, ");
-            } else {
-                System.out.print("Retreated from hopeless move, ");
-            }
+            System.out.print("Retreated from hopeless move, ");
             System.out.println(freeSlots + " free slots");
             System.out.println(movesSeenInThisGame + " moves seen in this game");
 //            System.out.println(movesPrunedInThisGame + " moves pruned in this game");
@@ -234,7 +230,6 @@ public class Schedule {
 //        System.out.println(slot);
 ////    }
 //    }
-
 //    private void updateAvg(int legalMovesInThisLoop, int depth) {
 //        int weight = samplesAtDepth[depth];
 //        samplesAtDepth[depth] = samplesAtDepth[depth] + 1;

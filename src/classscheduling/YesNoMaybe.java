@@ -9,17 +9,10 @@ package classscheduling;
  *
  * @author krzys
  */
-public class SanityCheckException extends Exception {
+public enum YesNoMaybe {
     
-    String s;
-
-    public SanityCheckException(String s) {
-        this.s = s;
-    }
-    
-    @Override
-    public String getMessage() {
-        return s;
-    }
+    YES,
+    NO,
+    MAYBE;
     
 }

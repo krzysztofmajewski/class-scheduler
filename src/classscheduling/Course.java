@@ -15,16 +15,17 @@ public enum Course {
     MATH("Math", 'M', 4, 1),
     FRENCH("French", 'F', 5, 0),
     GEOGRAPHY("Geography", 'G', 2, 0),
-    ENGLISH("English", 'E', 4, 1),
     ART("Art", 'A', 2, 2),
+    ENGLISH("English", 'E', 4, 1),
     MUSIC("Music", 'U', 3, 1);
 
     final String name;
+
     final char code;
     final int periods;
     final int daysOff;
 
-    final private int periodsScheduled[];
+    private int periodsScheduled[];
 
     private Course(String name, char code, int periods, int daysOff) {
         this.name = name;
@@ -32,6 +33,12 @@ public enum Course {
         this.periods = periods;
         this.daysOff = daysOff;
         periodsScheduled = new int[3];
+    }
+
+    static void reset() {
+        for (Course course : Course.values()) {
+            course.periodsScheduled = new int[3];
+        }
     }
 
     public static Course forCode(char c) {

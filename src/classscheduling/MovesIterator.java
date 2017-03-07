@@ -30,7 +30,7 @@ public class MovesIterator {
     
     Course currentCourse;
     
-    public MovesIterator(Schedule schedule, Course currentCourse, int depth) {
+    public MovesIterator(Schedule schedule, Course currentCourse) {
         this.schedule = schedule;
         remainingSlots = new ArrayList<>();
         for (Slot slot : schedule.freeSlotList) {
@@ -45,7 +45,7 @@ public class MovesIterator {
             }
             remainingCourses.add(course);
         }
-        this.depth = depth;
+        this.depth = 60 - remainingSlots.size();
     }
 
     public MovesIterator(MovesIterator parent) {
@@ -66,10 +66,6 @@ public class MovesIterator {
 
     boolean notDone() {
         return nextSlotToTry != null && currentCourse != null;
-    }
-
-    boolean takingTooLong() {
-        return depth > MAX_DEPTH;
     }
 
     // returns a slot filled with a course that has not yet been tried in that slot

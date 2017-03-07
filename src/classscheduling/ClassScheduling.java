@@ -20,8 +20,6 @@ import static classscheduling.Period.SECOND;
  */
 public class ClassScheduling {
 
-    static final long MAX_ITERATIONS = 1;
-
     static Schedule example;
 
     /**
@@ -35,46 +33,15 @@ public class ClassScheduling {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-//                System.out.println(example.legalMovesTried + " legal moves tried");
+                System.out.println("Shutdown hook called.");
                 example.print();
             }
         });
 
-        int iterations = 0;
-        boolean result;
-        MovesIterator iterator;
-        do {
-            iterations++;
             example = exampleSchedule();
-            iterator = new MovesIterator(example, Course.MATH, 3);
-            result = example.scheduleCourses(iterator);
+        MovesIterator iterator = new MovesIterator(example, Course.MATH);
+        boolean result = example.scheduleCourses(iterator);
             if (result) {
-                break;
-            }
-            if (!iterator.takingTooLong()) {
-                break;
-            }
-//            System.out.println();
-//            example.print();
-//            System.out.println("\n**** Search did not complete in time, trying endgame on best path found ****\n");
-//            example = new Schedule(example.bestStateSeenSoFar);
-//            iterator = new MovesIterator(example, Course.MATH);
-//            result = example.scheduleCourses(iterator);
-//            if (result) {
-//                break;
-//            }
-//            if (!iterator.takingTooLong()) {
-//                System.out.println("\n**** Endgame failed ****\n");
-//                // this starting state did not lead to a win
-//            } else {
-//                System.out.println("\n**** Endgame did not complete in time ****\n");
-//            }
-//            MovesIterator.increaseThreshold();
-//            System.out.println("Increasing search volume threshold to "
-//                    + MovesIterator.BAD_MOVE_THRESHOLD);
-        } while (iterations < MAX_ITERATIONS);
-
-        if (result) {
             System.out.println("Success!");
         } else {
             System.out.println("Failed.");
@@ -82,10 +49,14 @@ public class ClassScheduling {
         example.validator.validate();
         // this should not print anything in case of success
         example.validator.printErrors();
-        System.out.println(example.movesSeenInThisGame + " moves seen in this game");
-        System.out.println(example.movesFailedVetting + " moves failed vetting in this game");
-        System.out.println(example.hopelessPartialSchedules.numAdded + " partial schedules added to lookup table");
-        System.out.println(example.hopelessPartialSchedules.numElements + " partial schedules remaining in lookup table");
+        System.out.println(example.movesSeenInThisGame
+                + " moves seen in this game");
+        System.out.println(example.movesFailedVetting
+                + " moves failed vetting in this game");
+        System.out.println(example.hopelessPartialSchedules.numAdded
+                + " partial schedules added to lookup table");
+        System.out.println(example.hopelessPartialSchedules.numElements
+                + " partial schedules remaining in lookup table");
     }
 
     private static Schedule exampleSchedule() throws Exception {

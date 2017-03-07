@@ -30,13 +30,14 @@ public class HopelessPartialSchedules {
         boardStates = new Object[61];
     }
 
-    void addThisPartialSchedule(int depth) {
+    BoardState addThisPartialSchedule(int depth) {
         BoardState bs = new BoardState(schedule.freeSlotList, depth);
         purgeSuperPatterns(bs);
         add(bs);
+        return bs;
     }
 
-    BoardState find(BoardState bs) {
+    BoardState findThisPatternOrSubpatternThereof(BoardState bs) {
         BoardState result = null;
         for (int depthIndex=1; depthIndex <= bs.depth; depthIndex++) {
             if (result != null) {
@@ -74,7 +75,7 @@ public class HopelessPartialSchedules {
     //   a board state that is a subpattern of this board state
     boolean vetThisMove(int depth) {
         BoardState bs = new BoardState(schedule.freeSlotList, depth);
-        return (find(bs) == null);
+        return (findThisPatternOrSubpatternThereof(bs) == null);
     }
 
     private void add(BoardState bs) {

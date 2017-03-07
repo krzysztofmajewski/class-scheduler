@@ -177,6 +177,9 @@ public class HopelessPartialSchedules {
                         depthHeads[removeMe.depth] = prev;
                     }
                 }
+                if (first == removeMe) {
+                    first = removeMe.next;
+                }
                 removeMe.prev = null;
                 removeMe.next = null;
                 numPurged++;

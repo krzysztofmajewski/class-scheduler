@@ -28,12 +28,12 @@ public class HopelessPartialSchedules {
     int numElements;
 
     // for each index d, the element at d is a pointer to the least recently added BoardState of depth d
-    private final BoardState depthHeads[];
+    final BoardState depthHeads[];
 
     // for each index d, the element at d is a pointer to the most recently added BoardState of depth d
-    private final BoardState depthTails[];
+    final BoardState depthTails[];
 
-    private BoardState first;
+    BoardState first;
 
     public HopelessPartialSchedules(Schedule schedule) {
         this.schedule = schedule;
@@ -42,13 +42,14 @@ public class HopelessPartialSchedules {
         depthTails = new BoardState[61];
     }
 
-    void addThisPartialSchedule(int depth) throws SanityCheckException {
+    BoardState addThisPartialSchedule(int depth) throws SanityCheckException {
         BoardState bs = new BoardState(schedule.freeSlotList, depth);
         purgeSuperPatterns(bs);
         add(bs);
+        return bs;
     }
 
-    BoardState find(BoardState bs) {
+    BoardState findThisPatternOrSubpatternThereof(BoardState bs) {
         BoardState result = null;
         // TODO: if many BoardStates at one depth, might have been faster to stick with ArrayList<BoardState> iterator
         for (BoardState cursor = first; cursor != null; cursor = cursor.next) {
@@ -79,7 +80,7 @@ public class HopelessPartialSchedules {
 //   a board state that is a subpattern of this board state
     boolean vetThisMove(int depth) {
         BoardState bs = new BoardState(schedule.freeSlotList, depth);
-        return (find(bs) == null);
+        return (findThisPatternOrSubpatternThereof(bs) == null);
     }
 
     // TODO: nuke sanity checks

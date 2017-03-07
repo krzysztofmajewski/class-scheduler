@@ -63,7 +63,7 @@ class BoardState {
     }
 
     boolean isSubPatternOf(BoardState bs) {
-        for (int i = 0; i < 60; i++) {
+        for (int i = 0; i < board.length; i++) {
             char c = board[i];
             if (c != 0) {
                 if (bs.board[i] != c) {

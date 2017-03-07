@@ -191,6 +191,7 @@ public class Schedule {
         return result;
     }
 
+    // TODO: remove sanity check
     void clear(Slot slot) throws SanityCheckException {
         Course course = slot.getCourse();
         course.decrementPeriodsScheduled(slot);
@@ -216,23 +217,4 @@ public class Schedule {
         return slot;
     }
 
-//    private void printProgress(Slot slot, Course course, MovesIterator iterator) {
-//        // print a status update every once in a while
-////        if ((movesTried % MILLION) == 1) {
-//        System.out.println("[" + VERSION + "] " + freeSlots + " free slots left after "
-//                + legalMovesTried + " legal moves:");
-//        print();
-////            validator.reset();
-////            validator.validate();
-////            validator.printErrors();
-////            System.out.println(iterator.repeatedBadMoves + " known bad moves made on this solution path (" 
-////            + iterator.totalMoves + " total)");
-//        System.out.println(slot);
-////    }
-//    }
-//    private void updateAvg(int legalMovesInThisLoop, int depth) {
-//        int weight = samplesAtDepth[depth];
-//        samplesAtDepth[depth] = samplesAtDepth[depth] + 1;
-//        avgIllegalMovesAtDepth[depth] = (avgIllegalMovesAtDepth[depth] * (double) weight + (double) legalMovesInThisLoop) / (double) (weight + 1);
-//    }
 }

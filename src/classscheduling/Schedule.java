@@ -25,7 +25,6 @@ public class Schedule {
     int smallestNumberOfFreeSlots = 60;
     int largestNumberOfFreeSlotsWhenBacktracking = 0;
     long movesSeenInThisGame = 0;
-    long movesPrunedInThisGame = 0;
     long movesFailedVetting = 0;
 
     double[] avgIllegalMovesAtDepth;
@@ -138,15 +137,9 @@ public class Schedule {
         }
         iterator.retreat(slot);
         if (printInfo) {
-            if (subproblemIterator.takingTooLong()) {
-                System.out.print("Retreated from slow move, ");
-            } else {
-                System.out.print("Retreated from hopeless move, ");
-            }
+            System.out.print("Retreated from hopeless move, ");
             System.out.println(freeSlots + " free slots");
-            System.out.println(movesSeenInThisGame + " moves seen in this game");
-//            System.out.println(movesPrunedInThisGame + " moves pruned in this game");
-            System.out.println(movesFailedVetting + " moves failed vetting in this game");
+            printStats();
             print();
             if (iterator.currentCourse == null) {
                 System.out.println("This iterator has attempted all of its moves");
@@ -154,6 +147,21 @@ public class Schedule {
                 System.out.println("Next move for this iterator will try to schedule course: " + iterator.currentCourse);
             }
         }
+    }
+
+    void printStats() {
+        System.out.println(movesSeenInThisGame + " moves seen in this game");
+        System.out.println(movesFailedVetting + " moves failed vetting in this game");
+        System.out.println(hopelessPartialSchedules.numAdded
+                + " partial schedules added to lookup table");
+        System.out.println(hopelessPartialSchedules.numPurged
+                + " partial schedules purged from lookup table");
+        System.out.println(hopelessPartialSchedules.numOverflowed
+                + " partial schedules exceeded lookup table capacity");
+        System.out.println(hopelessPartialSchedules.numElements
+                + " partial schedules remaining in lookup table");
+        System.out.println(hopelessPartialSchedules.maxElements
+                + " partial schedules in lookup table at its fullest");
     }
 
     boolean enoughPeriodsPerWeek(Course course
@@ -195,6 +203,7 @@ public class Schedule {
         return result;
     }
 
+    // TODO: remove sanity check
     void clear(Slot slot) throws SanityCheckException {
         Course course = slot.getCourse();
         course.decrementPeriodsScheduled(slot);
@@ -220,24 +229,4 @@ public class Schedule {
         return slot;
     }
 
-//    private void printProgress(Slot slot, Course course, MovesIterator iterator) {
-//        // print a status update every once in a while
-////        if ((movesTried % MILLION) == 1) {
-//        System.out.println("[" + VERSION + "] " + freeSlots + " free slots left after "
-//                + legalMovesTried + " legal moves:");
-//        print();
-////            validator.reset();
-////            validator.validate();
-////            validator.printErrors();
-////            System.out.println(iterator.repeatedBadMoves + " known bad moves made on this solution path (" 
-////            + iterator.totalMoves + " total)");
-//        System.out.println(slot);
-////    }
-//    }
-
-//    private void updateAvg(int legalMovesInThisLoop, int depth) {
-//        int weight = samplesAtDepth[depth];
-//        samplesAtDepth[depth] = samplesAtDepth[depth] + 1;
-//        avgIllegalMovesAtDepth[depth] = (avgIllegalMovesAtDepth[depth] * (double) weight + (double) legalMovesInThisLoop) / (double) (weight + 1);
-//    }
 }

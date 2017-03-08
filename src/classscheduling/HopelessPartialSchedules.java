@@ -18,9 +18,12 @@ public class HopelessPartialSchedules {
 
     private final Schedule schedule;
 
-    int numAdded;
-    int numPurged;
+    long numAdded;
+    long numPurged;
+    long numOverflowed;
+
     int numElements;
+    int maxElements;
 
     private final Object boardStates[];
 
@@ -39,7 +42,7 @@ public class HopelessPartialSchedules {
 
     BoardState findThisPatternOrSubpatternThereof(BoardState bs) {
         BoardState result = null;
-        for (int depthIndex=1; depthIndex <= bs.depth; depthIndex++) {
+        for (int depthIndex = 1; depthIndex <= bs.depth; depthIndex++) {
             if (result != null) {
                 break;
             }
@@ -81,6 +84,7 @@ public class HopelessPartialSchedules {
     private void add(BoardState bs) {
         // TODO: does this ever happen? should we shake things up when it does?
         if (numElements >= MAX_ENTRIES) {
+            numOverflowed++;
             return;
         }
         ArrayList<BoardState> depthList = (ArrayList<BoardState>) boardStates[bs.depth];
@@ -92,6 +96,9 @@ public class HopelessPartialSchedules {
         depthList.add(bs);
         numAdded++;
         numElements++;
+        if (numElements > maxElements) {
+            maxElements = numElements;
+        }
     }
 
     private void purgeSuperPatterns(BoardState bs) {

@@ -5,7 +5,6 @@
  */
 package classscheduling;
 
-import static classscheduling.Schedule.MILLION;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,10 +15,10 @@ import java.util.List;
 public class MovesIterator {
 
     static long MAX_DEPTH = 60;
-    
+
     final int depth;
     long badMovesSeen;
-    
+
     private final Schedule schedule;
 
     private final List<Slot> remainingSlots;
@@ -27,9 +26,9 @@ public class MovesIterator {
     private final List<Course> remainingCourses;
 
     private Slot nextSlotToTry;
-    
+
     Course currentCourse;
-    
+
     public MovesIterator(Schedule schedule, Course currentCourse) {
         this.schedule = schedule;
         remainingSlots = new ArrayList<>();
@@ -116,4 +115,5 @@ public class MovesIterator {
     void markMoveAsIllegal() throws SanityCheckException {
         schedule.hopelessPartialSchedules.addThisPartialSchedule(depth);
     }
+
 }

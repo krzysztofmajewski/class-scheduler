@@ -17,8 +17,6 @@ public class Schedule {
 
     public static final String VERSION = "v4";
 
-    public static final int MILLION = 1000 * 1000;
-
     final List<Slot> freeSlotList;
 
     int freeSlots = 60;
@@ -164,8 +162,7 @@ public class Schedule {
                 + " partial schedules in lookup table at its fullest");
     }
 
-    boolean enoughPeriodsPerWeek(Course course
-    ) {
+    boolean enoughPeriodsPerWeek(Course course) {
         for (Grade g : Grade.values()) {
             if (course.getPeriodsScheduled(g) < course.periods) {
                 return false;
@@ -182,25 +179,6 @@ public class Schedule {
         s.gradeDay = gd;
         s.period = period;
         return set(s, course);
-    }
-
-    private ArrayList<Slot> initFreeSlotList() {
-        ArrayList<Slot> result = new ArrayList<>();
-        for (Grade g : Grade.values()) {
-            for (Day day : Day.values()) {
-                day.reset();
-                for (Period p : Period.values()) {
-                    if (day.getGradeDay(g).get(p) == 0) {
-                        Slot slot = new Slot();
-                        slot.day = day;
-                        slot.gradeDay = day.getGradeDay(g);
-                        slot.period = p;
-                        result.add(slot);
-                    }
-                }
-            }
-        }
-        return result;
     }
 
     // TODO: remove sanity check
@@ -229,4 +207,20 @@ public class Schedule {
         return slot;
     }
 
+    private ArrayList<Slot> initFreeSlotList() {
+        ArrayList<Slot> result = new ArrayList<>();
+        for (Grade g : Grade.values()) {
+            for (Day day : Day.values()) {
+                day.reset();
+                for (Period p : Period.values()) {
+                    Slot slot = new Slot();
+                    slot.day = day;
+                    slot.gradeDay = day.getGradeDay(g);
+                    slot.period = p;
+                    result.add(slot);
+                }
+            }
+        }
+        return result;
+    }
 }

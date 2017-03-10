@@ -17,7 +17,6 @@ public class MovesIterator {
     static long MAX_DEPTH = 60;
 
     final int depth;
-    long badMovesSeen;
 
     private final Schedule schedule;
 
@@ -74,7 +73,6 @@ public class MovesIterator {
             remainingCourses.add(course);
         }
         this.depth = parent.depth + 1;
-        this.badMovesSeen = parent.badMovesSeen;
     }
 
     boolean notDone() {

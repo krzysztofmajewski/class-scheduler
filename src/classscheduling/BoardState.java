@@ -51,7 +51,6 @@ class BoardState {
     @Override
     public int hashCode() {
         int hash = 7;
-//        hash = 97 * hash + this.depth;
         hash = 97 * hash + Arrays.hashCode(this.board);
         return hash;
     }

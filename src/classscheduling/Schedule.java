@@ -112,7 +112,6 @@ public class Schedule {
             if (hasSolution) {
                 return true;
             }
-            iterator.badMovesSeen++;
             retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, move);
         }
         if (freeSlots > 0) {
@@ -240,11 +239,6 @@ public class Schedule {
 
     private Course[] initBoard() {
         return new Course[60];
-    }
-
-    // debugging
-    private boolean isInteresting(Move move) {
-        return move.slot.grade.equals(Grade.NINE) && move.slot.day.equals(Day.FRIDAY) && move.slot.period.equals(Period.FIRST) && move.course.equals(FRENCH);
     }
 
     private void incrementFrenchPeriodsScheduled(Grade grade, Day day, Period period) throws SanityCheckException {

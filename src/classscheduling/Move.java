@@ -9,20 +9,14 @@ package classscheduling;
  *
  * @author krzys
  */
-public enum Grade {
+public class Move {
     
-    SEVEN("Grade 7"),
-    EIGHT("Grade 8"),
-    NINE("Grade 9");
+    Slot slot;
+    Course course;
     
-    private final String name;
-    
-    private Grade(String name) {
-        this.name = name;
+    public Move(Slot slot, Course course) {
+        this.slot = slot;
+        this.course = course;
     }
     
-    @Override
-    public String toString() {
-        return this.name;
-    }
 }

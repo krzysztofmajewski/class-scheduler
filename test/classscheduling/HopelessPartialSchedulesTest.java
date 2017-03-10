@@ -69,7 +69,7 @@ public class HopelessPartialSchedulesTest {
         System.out.println("purge");
         HopelessPartialSchedules instance = addOneFindOne();
         // clear a slot to create a sub-pattern of current BoardState
-        clear(MONDAY, NINE, SECOND);
+        clear(MONDAY, NINE, SECOND, MATH);
         // TODO: all this manipulating of the depth is annoying
         int depth = 60 - schedule.freeSlots;
         // add the sub-pattern -- this should trigger a purge
@@ -89,7 +89,7 @@ public class HopelessPartialSchedulesTest {
         HopelessPartialSchedules instance = addOneFindOne();
         int depth = 60 - schedule.freeSlots;
         // save initial state
-        BoardState bs = new BoardState(schedule.freeSlotList, depth);
+        BoardState bs = new BoardState(schedule, depth);
         // fill a slot
         schedule.set(WEDNESDAY, NINE, SECOND, ART);
         depth = 60 - schedule.freeSlots;
@@ -121,7 +121,7 @@ public class HopelessPartialSchedulesTest {
         // create an instance containing one partial schedule...
         HopelessPartialSchedules instance = new HopelessPartialSchedules(schedule);
         // ...construct a move that is not a super-pattern of that partial schedule
-        clear(MONDAY, NINE, SECOND);
+        clear(MONDAY, NINE, SECOND, MATH);
         int depth = 60 - schedule.freeSlots;
         boolean result = instance.vetThisMove(depth);
         assertEquals(expResult, result);
@@ -132,10 +132,10 @@ public class HopelessPartialSchedulesTest {
         HopelessPartialSchedules instance = addOneFindOne();
         int depth = 60 - schedule.freeSlots;
         assertEquals(depth, 2);
-        BoardState tmpMathMusic = new BoardState(schedule.freeSlotList, depth);
+        BoardState tmpMathMusic = new BoardState(schedule, depth);
         BoardState mathMusic = instance.findThisPatternOrSubpatternThereof(tmpMathMusic);
 
-        clear(TUESDAY, EIGHT, FOURTH);
+        clear(TUESDAY, EIGHT, FOURTH, MUSIC);
         depth = 60 - schedule.freeSlots;
         assertEquals(depth, 1);
         schedule.set(WEDNESDAY, SEVEN, THIRD, FRENCH);
@@ -148,7 +148,7 @@ public class HopelessPartialSchedulesTest {
         assertEquals(depth, 3);
         BoardState mathFrenchArt = instance.addThisPartialSchedule(depth);
 
-        clear(WEDNESDAY, SEVEN, THIRD);
+        clear(WEDNESDAY, SEVEN, THIRD, FRENCH);
         depth = 60 - schedule.freeSlots;
         assertEquals(depth, 2);
         BoardState mathArt = instance.addThisPartialSchedule(depth);
@@ -162,7 +162,7 @@ public class HopelessPartialSchedulesTest {
         assertEquals(mathMusic.depth, 2);
 
         // unschedule ART and add some other courses
-        clear(WEDNESDAY, SEVEN, FOURTH);
+        clear(WEDNESDAY, SEVEN, FOURTH, ART);
         // now it's just MATH
         schedule.set(THURSDAY, NINE, FIRST, GEOGRAPHY);
         schedule.set(FRIDAY, NINE, FIRST, MUSIC);
@@ -176,11 +176,11 @@ public class HopelessPartialSchedulesTest {
         assertEquals(mathGeographyMusic.depth, 3);
 
         // unschedule MUSIC
-        clear(FRIDAY, NINE, FIRST);
+        clear(FRIDAY, NINE, FIRST, MUSIC);
         // unschedule GEOGRAPHY
-        clear(THURSDAY, NINE, FIRST);
+        clear(THURSDAY, NINE, FIRST, GEOGRAPHY);
         // unschedule MATH
-        clear(MONDAY, NINE, SECOND);
+        clear(MONDAY, NINE, SECOND, MATH);
         // schedule ENGLISH
         schedule.set(MONDAY, EIGHT, FOURTH, ENGLISH);
         depth = 60 - schedule.freeSlots;
@@ -189,12 +189,10 @@ public class HopelessPartialSchedulesTest {
         assertEquals(english.depth, 1);
     }
 
-    private void clear(Day day, Grade grade, Period period) throws SanityCheckException {
-        Slot slot = new Slot();
-        slot.day = day;
-        slot.gradeDay = day.getGradeDay(grade);
-        slot.period = period;
-        schedule.clear(slot);
+    private void clear(Day day, Grade grade, Period period, Course course) throws SanityCheckException {
+        Slot slot = new Slot(grade, day, period);
+        Move move = new Move(slot, course);
+        schedule.clear(move);
     }
 
     private static Schedule testSchedule() throws SanityCheckException {

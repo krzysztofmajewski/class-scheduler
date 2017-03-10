@@ -18,14 +18,14 @@ class BoardState {
     char board[];
     int hits;
 
-    public BoardState(List<Slot> freeSlotList, int depth) {
+    public BoardState(Schedule schedule, int depth) {
         board = new char[60];
         this.depth = depth;
         int index = 0;
         for (Grade grade : Grade.values()) {
             for (Day day : Day.values()) {
                 for (Period period : Period.values()) {
-                    Course course = day.getGradeDay(grade).getCourse(period);
+                    Course course = schedule.getCourse(grade, day, period);
                     if (course != null) {
                         board[index] = course.code;
                     }
@@ -51,7 +51,6 @@ class BoardState {
     @Override
     public int hashCode() {
         int hash = 7;
-//        hash = 97 * hash + this.depth;
         hash = 97 * hash + Arrays.hashCode(this.board);
         return hash;
     }

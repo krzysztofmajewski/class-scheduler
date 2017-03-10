@@ -5,8 +5,7 @@
  */
 package classscheduling;
 
-import java.util.ArrayList;
-import java.util.List;
+import static classscheduling.Course.FRENCH;
 
 /**
  *
@@ -17,9 +16,7 @@ public class Schedule {
 
     public static final String VERSION = "v4";
 
-    public static final int MILLION = 1000 * 1000;
-
-    final List<Slot> freeSlotList;
+    final Course board[];
 
     int freeSlots = 60;
     int smallestNumberOfFreeSlots = 60;
@@ -35,8 +32,8 @@ public class Schedule {
     final ScheduleValidator validator;
 
     public Schedule() {
+        board = initBoard();
         validator = new ScheduleValidator(this);
-        freeSlotList = initFreeSlotList();
         Course.reset();
         avgIllegalMovesAtDepth = new double[60];
         samplesAtDepth = new int[60];
@@ -44,15 +41,16 @@ public class Schedule {
     }
 
     void print() {
-        for (Grade g : Grade.values()) {
-            System.out.printf("%10s", g.name() + " |");
+        for (Grade grade : Grade.values()) {
+            System.out.printf("%10s", grade.name() + " |");
             for (Day day : Day.values()) {
                 for (Period period : Period.values()) {
-                    char c = day.getGradeDay(g).get(period);
-                    if (c == 0) {
-                        c = '?';
+                    Course course = getCourse(grade, day, period);
+                    if (course == null) {
+                        System.out.print('?');
+                    } else {
+                        System.out.print(course.code);
                     }
-                    System.out.print(c);
                 }
                 System.out.print("|");
             }
@@ -69,28 +67,31 @@ public class Schedule {
             return false;
         }
         while (iterator.notDone()) {
-            Slot slot = (Slot) iterator.move();
+            Move move = iterator.move();
+//            System.out.println("Moved: " + move.slot + " : " + move.course);
             // TODO: should we vet first, then check correctness?
             // check for correctness of current schedule
             validator.reset();
-            validator.validateCorrectnessConstraints(slot);
+            validator.validateCorrectnessConstraints(move);
             if (validator.hasErrors()) {
                 // no solution from this move, try another slot
                 movesSeenInThisGame++;
 //                iterator.markMoveAsIllegal();
-                iterator.retreat(slot);
+                iterator.retreat(move);
+//                System.out.println("Retreated illegal move: " + move.slot + " : " + move.course);
                 continue;
             }
             // valid move
             boolean vetted = hopelessPartialSchedules.vetThisMove(iterator.depth);
             if (!vetted) {
                 movesFailedVetting++;
-                iterator.retreat(slot);
+                iterator.retreat(move);
+//                System.out.println("Retreated known bad move: " + move.slot + " : " + move.course);
                 continue;
             }
             if (freeSlots < smallestNumberOfFreeSlots) {
                 smallestNumberOfFreeSlots = freeSlots;
-                System.out.println("Best move so far: " + slot);
+                System.out.println("Best move so far: " + move.slot);
                 System.out.println(freeSlots + " free slots left");
                 print();
                 System.out.println();
@@ -111,8 +112,7 @@ public class Schedule {
             if (hasSolution) {
                 return true;
             }
-            iterator.badMovesSeen++;
-            retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, slot);
+            retreatAndPrintInfoIfNeeded(iterator, subproblemIterator, move);
         }
         if (freeSlots > 0) {
             // tried all possible moves, did not find solution
@@ -128,14 +128,15 @@ public class Schedule {
     }
 
     void retreatAndPrintInfoIfNeeded(MovesIterator iterator, MovesIterator subproblemIterator,
-            Slot slot) throws SanityCheckException {
+            Move move) throws SanityCheckException {
         boolean printInfo = false;
         if (freeSlots > largestNumberOfFreeSlotsWhenBacktracking) {
             largestNumberOfFreeSlotsWhenBacktracking = freeSlots;
-            System.out.println("\nRetreating from: " + slot);
+            System.out.println("\nRetreating from: " + move.slot + " : " + move.course);
             printInfo = true;
         }
-        iterator.retreat(slot);
+        iterator.retreat(move);
+//        System.out.println("Retreated bad move: " + move.slot + " : " + move.course);
         if (printInfo) {
             System.out.print("Retreated from hopeless move, ");
             System.out.println(freeSlots + " free slots");
@@ -164,69 +165,110 @@ public class Schedule {
                 + " partial schedules in lookup table at its fullest");
     }
 
-    boolean enoughPeriodsPerWeek(Course course
-    ) {
-        for (Grade g : Grade.values()) {
-            if (course.getPeriodsScheduled(g) < course.periods) {
+    boolean enoughPeriodsPerWeek(Course course) {
+        for (Grade grade : Grade.values()) {
+            if (course.count(grade) < course.periods) {
                 return false;
             }
         }
         return true;
     }
 
-    Slot set(Day day, Grade grade,
-            Period period, Course course) throws SanityCheckException {
-        GradeDay gd = day.getGradeDay(grade);
-        Slot s = new Slot();
-        s.day = day;
-        s.gradeDay = gd;
-        s.period = period;
-        return set(s, course);
+    Slot set(Day day, Grade grade, Period period, Course course) throws SanityCheckException {
+        Slot slot = new Slot(grade, day, period);
+        Move move = new Move(slot, course);
+        return set(move);
     }
 
-    private ArrayList<Slot> initFreeSlotList() {
-        ArrayList<Slot> result = new ArrayList<>();
-        for (Grade g : Grade.values()) {
-            for (Day day : Day.values()) {
-                day.reset();
-                for (Period p : Period.values()) {
-                    if (day.getGradeDay(g).get(p) == 0) {
-                        Slot slot = new Slot();
-                        slot.day = day;
-                        slot.gradeDay = day.getGradeDay(g);
-                        slot.period = p;
-                        result.add(slot);
-                    }
-                }
-            }
+    // TODO: remove sanity checks
+    void clear(Move move) throws SanityCheckException {
+        freeSlots++;
+        int index = computeIndex(move.slot.grade, move.slot.day, move.slot.period);
+        if (board[index] == null) {
+            throw new SanityCheckException(move.slot + " already cleared");
         }
-        return result;
+        if (board[index] != move.course) {
+            throw new SanityCheckException(move.slot + ": expected " + move.course + " but found " + board[index]);
+        }
+        board[index] = null;
+        if (!move.course.equals(FRENCH)) {
+            move.course.decrementPeriodsScheduled(move.slot.grade, move.slot.day);
+        } else {
+            decrementFrenchPeriodsScheduled(move.slot.grade, move.slot.day, move.slot.period);
+        }
+    }
+
+    // TODO: remove sanity checks
+    Slot set(Move move) throws SanityCheckException {
+        freeSlots--;
+        if (!move.course.equals(FRENCH)) {
+            move.course.incrementPeriodsScheduled(move.slot.grade, move.slot.day);
+        } else {
+            incrementFrenchPeriodsScheduled(move.slot.grade, move.slot.day, move.slot.period);
+        }
+        setCourse(move.slot.grade, move.slot.day, move.slot.period, move.course);
+        return move.slot;
     }
 
     // TODO: remove sanity check
-    void clear(Slot slot) throws SanityCheckException {
-        Course course = slot.getCourse();
-        course.decrementPeriodsScheduled(slot);
-        slot.gradeDay.clear(slot.period);
-        freeSlots++;
-        if (freeSlotList.contains(slot)) {
-            throw new SanityCheckException(slot + " should not be in free slot list");
+    void setCourse(Grade grade, Day day, Period period, Course course) throws SanityCheckException {
+        int index = computeIndex(grade, day, period);
+        if (board[index] != null) {
+            Slot slot = new Slot(grade, day, period);
+            throw new SanityCheckException(slot + " already has a course");
         }
-        freeSlotList.add(slot);
+        board[index] = course;
     }
 
-    Slot set(Slot slot, Course course) throws SanityCheckException {
-        char c = slot.gradeDay.get(slot.period);
-        if (c != 0) {
-            throw new SanityCheckException(slot + " already has a course: " + c);
+    Course getCourse(Grade grade, Day day, Period period) {
+        int index = computeIndex(grade, day, period);
+        return board[index];
+    }
+
+    boolean isScheduled(Course course, Grade grade, Day day, Period period) {
+        Course actualCourse = getCourse(grade, day, period);
+        return (actualCourse != null) && (actualCourse.equals(course));
+    }
+
+    private int computeIndex(Grade grade, Day day, Period period) {
+        int index = grade.ordinal() * Day.values().length * Period.values().length
+                + day.ordinal() * Period.values().length
+                + period.ordinal();
+        return index;
+    }
+
+    private Course[] initBoard() {
+        return new Course[60];
+    }
+
+    private void incrementFrenchPeriodsScheduled(Grade grade, Day day, Period period) throws SanityCheckException {
+        boolean alreadyScheduledInThisPeriod = false;
+        for (Grade g : Grade.values()) {
+            Course course = getCourse(g, day, period);
+            if ((course != null) && course.equals(FRENCH)) {
+                alreadyScheduledInThisPeriod = true;
+                break;
+            }
         }
-        slot.gradeDay.set(slot.period, course.code);
-        freeSlots--;
-        if (!freeSlotList.remove(slot)) {
-            throw new SanityCheckException(slot + " not found in free slot list");
+        if (!alreadyScheduledInThisPeriod) {
+            FRENCH.incrementFrenchPeriodsScheduled(day);
         }
-        course.incrementPeriodsScheduled(slot);
-        return slot;
+        FRENCH.incrementFrenchPeriodsScheduled(grade, day);
+    }
+
+    private void decrementFrenchPeriodsScheduled(Grade grade, Day day, Period period) throws SanityCheckException {
+        boolean stillScheduledInThisPeriod = false;
+        for (Grade g : Grade.values()) {
+            Course course = getCourse(g, day, period);
+            if ((course != null) && course.equals(FRENCH)) {
+                stillScheduledInThisPeriod = true;
+                break;
+            }
+        }
+        if (!stillScheduledInThisPeriod) {
+            FRENCH.decrementFrenchPeriodsScheduled(day);
+        }
+        FRENCH.decrementFrenchPeriodsScheduled(grade, day);
     }
 
 }

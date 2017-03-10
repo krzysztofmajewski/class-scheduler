@@ -339,8 +339,6 @@ public class ScheduleValidator {
 
         for (Grade grade : Grade.values()) {
             Course course = schedule.getCourse(grade, day, period);
-//            GradeDay gd = day.getGradeDay(grade);
-//            Course course = gd.getCourse(period);
             if (course == null) {
                 continue;
             }

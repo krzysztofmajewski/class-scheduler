@@ -12,21 +12,27 @@ import java.util.Objects;
  * @author krzys
  */
 class Slot {
+
+    final Grade grade;
+    final Day day;
+    final Period period;
     
-    Day day;
-    GradeDay gradeDay;
-    Period period;
-    
+    public Slot(Grade grade, Day day, Period period) {
+        this.grade = grade;
+        this.day = day;
+        this.period = period;
+    }
+
     @Override
     public String toString() {
-        return day.name + ", " + gradeDay.grade.name() + ", " + period + ", " + gradeDay.get(period);
+        return day.name + ", " + grade + ", " + period;
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof Slot) {
             Slot other = (Slot) o;
-            return (other.day.equals(day) && other.gradeDay.equals(gradeDay)) && other.period.equals(period);
+            return other.day.equals(day) && other.grade.equals(grade) && other.period.equals(period);
         }
         return false;
     }
@@ -35,21 +41,9 @@ class Slot {
     public int hashCode() {
         int hash = 7;
         hash = 53 * hash + Objects.hashCode(this.day);
-        hash = 53 * hash + Objects.hashCode(this.gradeDay);
+        hash = 53 * hash + Objects.hashCode(this.grade);
         hash = 53 * hash + Objects.hashCode(this.period);
         return hash;
     }
-    
-    Course getCourse() {
-        char c = gradeDay.get(period);
-        if (c == 0) {
-            return null;
-        }
-        return Course.forCode(c);
-    }
-    
-    Grade getGrade() {
-        return gradeDay.grade;
-    }
-    
+
 }

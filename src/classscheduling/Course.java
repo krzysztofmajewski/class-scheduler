@@ -25,9 +25,9 @@ public enum Course {
     final int periods;
     final int daysOff;
 
-    private int numPeriodsScheduledPerGrade[];
-    private int numPeriodsScheduledPerDay[];
-    private int numPeriodsScheduledPerGradePerDay[];
+    private final int numPeriodsScheduledPerGrade[];
+    private final int numPeriodsScheduledPerDay[];
+    private final int numPeriodsScheduledPerGradePerDay[];
 
     private Course(String name, char code, int periods, int daysOff) {
         this.name = name;
@@ -37,14 +37,6 @@ public enum Course {
         numPeriodsScheduledPerGrade = new int[Grade.values().length];
         numPeriodsScheduledPerDay = new int[Day.values().length];
         numPeriodsScheduledPerGradePerDay = new int[Grade.values().length * Day.values().length];
-    }
-
-    static void reset() {
-        for (Course course : Course.values()) {
-            course.numPeriodsScheduledPerGrade = new int[Grade.values().length];
-            course.numPeriodsScheduledPerDay = new int[Day.values().length];
-            course.numPeriodsScheduledPerGradePerDay = new int[Grade.values().length * Day.values().length];
-        }
     }
 
     public static Course forCode(char c) {
@@ -133,8 +125,17 @@ public enum Course {
         return numPeriodsScheduledPerGradePerDay[index];
     }
 
+    boolean enoughPeriodsPerWeek() {
+        for (Grade grade : Grade.values()) {
+            if (count(grade) < periods) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private int computeIndex(Grade grade, Day day) {
         return grade.ordinal() * Day.values().length + day.ordinal();
     }
-
+    
 }

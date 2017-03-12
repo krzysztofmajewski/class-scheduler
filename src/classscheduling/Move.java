@@ -13,6 +13,7 @@ public class Move {
     
     Slot slot;
     Course course;
+    boolean isIllegalMove;
     
     public Move(Slot slot, Course course) {
         this.slot = slot;

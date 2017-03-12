@@ -7,9 +7,6 @@ package classscheduling;
 
 import static classscheduling.Course.FRENCH;
 import static classscheduling.Course.GEOGRAPHY;
-import static classscheduling.Grade.EIGHT;
-import static classscheduling.Grade.NINE;
-import static classscheduling.Grade.SEVEN;
 
 /**
  *
@@ -26,10 +23,10 @@ public class ScheduleValidator {
 
     private boolean validationFailed;
 
-    private  final Schedule schedule;
+    private  final State board;
 
-    public ScheduleValidator(Schedule schedule) {
-        this.schedule = schedule;
+    public ScheduleValidator(State board) {
+        this.board = board;
         errors = new ValidationErrors();
     }
 
@@ -52,20 +49,17 @@ public class ScheduleValidator {
         return result;
     }
 
-    void validate() {
+    boolean validate() {
         reset();
         trackErrors = true;
         validateCorrectnessConstraints();
         validateCompletenessConstraints();
         trackErrors = false;
+        return !validationFailed;
     }
 
     // once violated, cannot be un-violated by filling more slots
     boolean validateCorrectnessConstraints(Move move) throws SanityCheckException {
-        if (move == null) {
-            // this should only happen if we just started
-            return true;
-        }
         boolean result = noCourseTwicePerDay(move)
                 && teacherHasAtMostThreePeriodsPerDay(move)
                 && conflictsWithConference(move)
@@ -75,7 +69,7 @@ public class ScheduleValidator {
         return result;
     }
 
-    private void validateCorrectnessConstraints() {
+    void validateCorrectnessConstraints() {
         noCourseTwicePerDay();
         teacherHasAtMostThreePeriodsPerDay();
         conflictsWithConference();
@@ -226,7 +220,7 @@ public class ScheduleValidator {
     private boolean frenchConferenceClassComplete(Day day, Period period) {
         int numGradesWithFrenchAtThisTime = 0;
         for (Grade grade : Grade.values()) {
-            if (schedule.isScheduled(FRENCH, grade, day, period)) {
+            if (board.isScheduled(FRENCH, grade, day, period)) {
                 numGradesWithFrenchAtThisTime++;
             }
         }
@@ -301,7 +295,7 @@ public class ScheduleValidator {
         }
         int count = 0;
         for (Grade grade : Grade.values()) {
-            if (schedule.isScheduled(course, grade, day, period)) {
+            if (board.isScheduled(course, grade, day, period)) {
                 count++;
             }
         }
@@ -338,7 +332,8 @@ public class ScheduleValidator {
         int otherClasses = 0;
 
         for (Grade grade : Grade.values()) {
-            Course course = schedule.getCourse(grade, day, period);
+            char c = board.getCourse(grade, day, period);
+            Course course = Course.forCode(c);
             if (course == null) {
                 continue;
             }

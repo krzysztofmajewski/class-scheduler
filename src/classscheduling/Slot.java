@@ -11,7 +11,7 @@ import java.util.Objects;
  *
  * @author krzys
  */
-class Slot {
+public class Slot {
 
     final Grade grade;
     final Day day;

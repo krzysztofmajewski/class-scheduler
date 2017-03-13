@@ -46,7 +46,12 @@ public class MovesIterator {
         this.depth = parent.depth + 1;
     }
 
-    boolean notDone() {
+    boolean notDone() throws SanityCheckException {
+        if (currentCourse.enoughPeriodsPerWeek()) {
+            initCurrentCourse();
+            initRemainingSlots();
+            prepareNextMove();
+        }
         return nextSlotToTry != null && currentCourse != null;
     }
 
@@ -80,10 +85,6 @@ public class MovesIterator {
     }
 
     private void prepareNextMove() throws SanityCheckException {
-        if (currentCourse.enoughPeriodsPerWeek()) {
-            initCurrentCourse();
-            initRemainingSlots();
-        }
         if (remainingSlots.isEmpty()) {
             nextSlotToTry = null;
         } else {
@@ -93,6 +94,7 @@ public class MovesIterator {
 
     // TODO: optimize?
     private void initCurrentCourse() {
+        currentCourse = null;
         for (Course course : Course.values()) {
             if (course.enoughPeriodsPerWeek()) {
                 continue;

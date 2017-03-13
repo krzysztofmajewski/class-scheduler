@@ -16,7 +16,7 @@ public class Solver {
 
     public static final String VERSION = "v4";
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     final State state;
 

@@ -18,96 +18,61 @@ public class MovesIterator {
 
     final int depth;
 
-    private final Schedule schedule;
+    private final State state;
 
     private final List<Slot> remainingSlots;
 
-    private final List<Course> remainingCourses;
-
     private Slot nextSlotToTry;
 
-    Course currentCourse;
+    private Course currentCourse;
 
-    // TODO: optimize?
-    public MovesIterator(Schedule schedule, Course currentCourse) {
-        this.schedule = schedule;
+    public MovesIterator(State state) throws SanityCheckException {
+        this.state = state;
         remainingSlots = new ArrayList<>();
-        for (Grade grade : Grade.values()) {
-            for (Day day : Day.values()) {
-                for (Period period : Period.values()) {
-                    Course course = schedule.getCourse(grade, day, period);
-                    if (course == null) {
-                        Slot slot = new Slot(grade, day, period);
-                        remainingSlots.add(slot);
-                    }
-                }
-            }
-        }
-        this.currentCourse = currentCourse;
+        initRemainingSlots();
         nextSlotToTry = remainingSlots.get(0);
-        remainingCourses = new ArrayList<>();
-        for (Course course : Course.values()) {
-            if (schedule.enoughPeriodsPerWeek(course)) {
-                continue;
-            }
-            remainingCourses.add(course);
-        }
+        initCurrentCourse();
         this.depth = 60 - remainingSlots.size();
     }
 
-    // TODO: optimize?
     public MovesIterator(MovesIterator parent) throws SanityCheckException {
-        schedule = parent.schedule;
+        state = parent.state;
         remainingSlots = new ArrayList<>();
-        for (Slot slot : parent.remainingSlots) {
-            Course course = schedule.getCourse(slot.grade, slot.day, slot.period);
-            if (course != null) {
-                throw new SanityCheckException(slot + " should not have a course");
-            }
+        parent.remainingSlots.forEach((slot) -> {
             remainingSlots.add(slot);
-        }
-        currentCourse = parent.currentCourse;
+        });
         nextSlotToTry = parent.nextSlotToTry;
-        remainingCourses = new ArrayList<>();
-        for (Course course : parent.remainingCourses) {
-            remainingCourses.add(course);
-        }
+        currentCourse = parent.currentCourse;
         this.depth = parent.depth + 1;
     }
 
-    boolean notDone() {
+    boolean notDone() throws SanityCheckException {
+        if (currentCourse.enoughPeriodsPerWeek()) {
+            initCurrentCourse();
+            initRemainingSlots();
+            prepareNextMove();
+        }
         return nextSlotToTry != null && currentCourse != null;
     }
 
-    // returns a slot filled with a course that has not yet been tried in that slot
-    Move move() throws SanityCheckException {
+    // TODO: remove sanity check
+    Move getNextMove() throws SanityCheckException {
         Move result = new Move(nextSlotToTry, currentCourse);
-        schedule.set(result);
         if (!remainingSlots.remove((Slot) nextSlotToTry)) {
             throw new SanityCheckException("free slot list does not contain " + (Slot) nextSlotToTry);
         }
-        nextSlotToTry = prepareNextMove();
+        prepareNextMove();
         return result;
     }
 
-    void retreat(Move move) throws SanityCheckException {
-        schedule.clear(move);
-    }
-
-    void selectNextCourse() throws SanityCheckException {
-        if (!remainingCourses.remove(currentCourse)) {
-            throw new SanityCheckException(currentCourse + " not found in remaining courses list");
-        }
-        if (remainingCourses.isEmpty()) {
-            currentCourse = null;
-            return;
-        }
-        currentCourse = remainingCourses.get(0);
-        // TODO: optimize?
+    // TODO: optimize?
+    private void initRemainingSlots() {
         for (Grade grade : Grade.values()) {
             for (Day day : Day.values()) {
                 for (Period period : Period.values()) {
-                    Course course = schedule.getCourse(grade, day, period);
+                    // TODO: write State.getCourseCode()
+                    char c = state.getCourse(grade, day, period);
+                    Course course = Course.forCode(c);
                     if (course == null) {
                         Slot slot = new Slot(grade, day, period);
                         if (!remainingSlots.contains(slot)) {
@@ -119,18 +84,24 @@ public class MovesIterator {
         }
     }
 
-    private Slot prepareNextMove() throws SanityCheckException {
-        if (currentCourse == null) {
-            return null;
-        }
+    private void prepareNextMove() throws SanityCheckException {
         if (remainingSlots.isEmpty()) {
-            return null;
+            nextSlotToTry = null;
+        } else {
+            nextSlotToTry = remainingSlots.get(0);
         }
-        return remainingSlots.get(0);
     }
 
-    void markMoveAsIllegal() throws SanityCheckException {
-        schedule.hopelessPartialSchedules.addThisPartialSchedule(depth);
+    // TODO: optimize?
+    private void initCurrentCourse() {
+        currentCourse = null;
+        for (Course course : Course.values()) {
+            if (course.enoughPeriodsPerWeek()) {
+                continue;
+            }
+            currentCourse = course;
+            break;
+        }
     }
 
 }

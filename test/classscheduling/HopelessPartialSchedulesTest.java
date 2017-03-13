@@ -36,7 +36,7 @@ import org.junit.Test;
  */
 public class HopelessPartialSchedulesTest {
 
-    private static Schedule schedule;
+    private static State state;
 
     public HopelessPartialSchedulesTest() {
     }
@@ -51,7 +51,7 @@ public class HopelessPartialSchedulesTest {
 
     @Before
     public void setUp() throws SanityCheckException {
-        schedule = testSchedule();
+        state = testState();
     }
 
     @After
@@ -65,151 +65,120 @@ public class HopelessPartialSchedulesTest {
     }
 
     @Test
-    public void testPurge() throws SanityCheckException {
-        System.out.println("purge");
+    public void testFindSubPatternAndPurge() throws SanityCheckException {
+        System.out.println("purge super-pattern and find sub-pattern");
         HopelessPartialSchedules instance = addOneFindOne();
-        // clear a slot to create a sub-pattern of current BoardState
-        clear(MONDAY, NINE, SECOND, MATH);
-        // TODO: all this manipulating of the depth is annoying
-        int depth = 60 - schedule.freeSlots;
+        // save the state because it will change
+        State savedState = new State(state);
+        // clear a slot to create a sub-pattern
+        state.clear(NINE, MONDAY, SECOND);
         // add the sub-pattern -- this should trigger a purge
-        BoardState subPattern = instance.addThisPartialSchedule(depth);
+        instance.markThisPartialScheduleAsHopeless(state);
         // assert that one element got purged, since it was a super-pattern
         assertEquals(instance.numElements, 1);
         assertEquals(instance.numPurged, 1);
         assertEquals(instance.numAdded, 2);
-        // find initial state, to make sure we purged the right thing
-        BoardState found = instance.findThisPatternOrSubpatternThereof(subPattern);
+        // find saved state, to make sure we purged the right thing
+        State found = instance.findThisPatternOrSubPatternThereof(savedState);
+        assertEquals(found, state);
+    }
+
+    @Test
+    public void testFindReturnsSubPattern() throws SanityCheckException {
+        System.out.println("find returns sub-pattern");
+        HopelessPartialSchedules instance = addOneFindOne();
+        // save state
+        State subPattern = new State(state);
+        // fill a slot
+        state.setCourse(NINE, WEDNESDAY, SECOND, ART);
+        // add the current state
+        instance.markThisPartialScheduleAsHopeless(state);
+        assertEquals(instance.numElements, 2);
+        assertEquals(instance.numAdded, 2);
+        assertEquals(instance.numPurged, 0);
+        State found = instance.findThisPatternOrSubPatternThereof(state);
+        // find() should return the sub-pattern
         assertEquals(found, subPattern);
     }
 
     @Test
-    public void testFindReturnsSubpattern() throws SanityCheckException {
-        System.out.println("find returns sub-pattern");
-        HopelessPartialSchedules instance = addOneFindOne();
-        int depth = 60 - schedule.freeSlots;
-        // save initial state
-        BoardState bs = new BoardState(schedule, depth);
-        // fill a slot
-        schedule.set(WEDNESDAY, NINE, SECOND, ART);
-        depth = 60 - schedule.freeSlots;
-        // add the super-pattern
-        BoardState superPattern = instance.addThisPartialSchedule(depth);
-        assertEquals(instance.numElements, 2);
-        assertEquals(instance.numAdded, 2);
-        assertEquals(instance.numPurged, 0);
-        BoardState found = instance.findThisPatternOrSubpatternThereof(superPattern);
-        // find() should return the sub-pattern
-        assertEquals(found, bs);
-    }
-
-    @Test
-    public void testVetThisMoveReturnsFalse() throws SanityCheckException {
-        System.out.println("vetThisMove returns false");
-        // add one BoardState
-        HopelessPartialSchedules instance = addOneFindOne();
-        int depth = 60 - schedule.freeSlots;
-        boolean expResult = false;
-        boolean result = instance.vetThisMove(depth);
-        assertEquals(expResult, result);
-    }
-
-    @Test
-    public void testVetThisMoveReturnsTrue() throws SanityCheckException {
-        System.out.println("vetThisMove returns true");
-        boolean expResult = true;
+    public void testFindReturnsNull() throws SanityCheckException {
+        System.out.println("find returns null");
         // create an instance containing one partial schedule...
-        HopelessPartialSchedules instance = new HopelessPartialSchedules(schedule);
-        // ...construct a move that is not a super-pattern of that partial schedule
-        clear(MONDAY, NINE, SECOND, MATH);
-        int depth = 60 - schedule.freeSlots;
-        boolean result = instance.vetThisMove(depth);
-        assertEquals(expResult, result);
+        HopelessPartialSchedules instance = addOneFindOne();
+        // ...construct a state that is not a super-pattern of that partial schedule
+        state.clear(NINE, MONDAY, SECOND);
+        State result = instance.findThisPatternOrSubPatternThereof(state);
+        assertNull(result);
     }
 
     @Test
-    public void testAddAndPurgeUpdateLinksCorrectly() throws SanityCheckException {
+    public void testAddAndPurge() throws SanityCheckException {
+        System.out.println("add and purge");
         HopelessPartialSchedules instance = addOneFindOne();
-        int depth = 60 - schedule.freeSlots;
-        assertEquals(depth, 2);
-        BoardState tmpMathMusic = new BoardState(schedule, depth);
-        BoardState mathMusic = instance.findThisPatternOrSubpatternThereof(tmpMathMusic);
+        State mathMusic = new State(state);
 
-        clear(TUESDAY, EIGHT, FOURTH, MUSIC);
-        depth = 60 - schedule.freeSlots;
-        assertEquals(depth, 1);
-        schedule.set(WEDNESDAY, SEVEN, THIRD, FRENCH);
-        depth = 60 - schedule.freeSlots;
-        assertEquals(depth, 2);
-        BoardState mathFrench = instance.addThisPartialSchedule(depth);
+        state.clear(EIGHT, TUESDAY, FOURTH);
+        state.setCourse(SEVEN, WEDNESDAY, THIRD, FRENCH);
+        
+        State mathFrench = new State(state);
+        instance.markThisPartialScheduleAsHopeless(mathFrench);
 
-        schedule.set(WEDNESDAY, SEVEN, FOURTH, ART);
-        depth = 60 - schedule.freeSlots;
-        assertEquals(depth, 3);
-        BoardState mathFrenchArt = instance.addThisPartialSchedule(depth);
+        state.setCourse(SEVEN, WEDNESDAY, FOURTH, ART);
+        State mathFrenchArt = new State(state);
+        instance.markThisPartialScheduleAsHopeless(mathFrenchArt);
 
-        clear(WEDNESDAY, SEVEN, THIRD, FRENCH);
-        depth = 60 - schedule.freeSlots;
-        assertEquals(depth, 2);
-        BoardState mathArt = instance.addThisPartialSchedule(depth);
+        state.clear(SEVEN, WEDNESDAY, THIRD);
+        State mathArt = new State(state);
+        instance.markThisPartialScheduleAsHopeless(mathArt);
 
         // should have been purged when adding mathArt
-        BoardState found = instance.findThisPatternOrSubpatternThereof(mathFrenchArt);
+        State found = instance.findThisPatternOrSubPatternThereof(mathFrenchArt);
         assertTrue(found.equals(mathArt) || found.equals(mathFrench));
 
-        assertEquals(mathArt.depth, 2);
-        assertEquals(mathFrench.depth, 2);
-        assertEquals(mathMusic.depth, 2);
-
         // unschedule ART and add some other courses
-        clear(WEDNESDAY, SEVEN, FOURTH, ART);
+        state.clear(SEVEN, WEDNESDAY, FOURTH);
         // now it's just MATH
-        schedule.set(THURSDAY, NINE, FIRST, GEOGRAPHY);
-        schedule.set(FRIDAY, NINE, FIRST, MUSIC);
-        depth = 60 - schedule.freeSlots;
-        assertEquals(depth, 3);
+        state.setCourse(NINE, THURSDAY, FIRST, GEOGRAPHY);
+        state.setCourse(NINE, FRIDAY, FIRST, MUSIC);
         // unrealistic because a sub-pattern already exists
         //   but at least this way, the super-pattern won't get purged
         //   since purging happens only when adding a sub-pattern
-        //   the goal here is just to validate the links
-        BoardState mathGeographyMusic = instance.addThisPartialSchedule(depth);
-        assertEquals(mathGeographyMusic.depth, 3);
+        State mathGeographyMusic = new State(state);
+        instance.markThisPartialScheduleAsHopeless(mathGeographyMusic);
+        
+        found = instance.findThisPatternOrSubPatternThereof(mathGeographyMusic);
+        assertEquals(found, mathGeographyMusic);
 
         // unschedule MUSIC
-        clear(FRIDAY, NINE, FIRST, MUSIC);
+        state.clear(NINE, FRIDAY, FIRST);
         // unschedule GEOGRAPHY
-        clear(THURSDAY, NINE, FIRST, GEOGRAPHY);
+        state.clear(NINE, THURSDAY, FIRST);
         // unschedule MATH
-        clear(MONDAY, NINE, SECOND, MATH);
+        state.clear(NINE, MONDAY, SECOND);
         // schedule ENGLISH
-        schedule.set(MONDAY, EIGHT, FOURTH, ENGLISH);
-        depth = 60 - schedule.freeSlots;
-        assertEquals(depth, 1);
-        BoardState english = instance.addThisPartialSchedule(depth);
-        assertEquals(english.depth, 1);
+        state.setCourse(EIGHT, MONDAY, FOURTH, ENGLISH);
+        State english = new State(state);
+        instance.markThisPartialScheduleAsHopeless(english);
+        
+        found = instance.findThisPatternOrSubPatternThereof(english);
+        assertEquals(found, english);
     }
 
-    private void clear(Day day, Grade grade, Period period, Course course) throws SanityCheckException {
-        Slot slot = new Slot(grade, day, period);
-        Move move = new Move(slot, course);
-        schedule.clear(move);
-    }
-
-    private static Schedule testSchedule() throws SanityCheckException {
-        Schedule result = new Schedule();
-        result.set(MONDAY, NINE, SECOND, MATH);
-        result.set(TUESDAY, EIGHT, FOURTH, MUSIC);
+    private static State testState() throws SanityCheckException {
+        State result = new State();
+        result.setCourse(NINE, MONDAY, SECOND, MATH);
+        result.setCourse(EIGHT, TUESDAY, FOURTH, MUSIC);
         return result;
     }
 
     private HopelessPartialSchedules addOneFindOne() throws SanityCheckException {
-        HopelessPartialSchedules instance = new HopelessPartialSchedules(schedule);
-        final int depth = 60 - schedule.freeSlots;
-        BoardState bs = instance.addThisPartialSchedule(depth);
-        BoardState found = instance.findThisPatternOrSubpatternThereof(bs);
+        HopelessPartialSchedules instance = new HopelessPartialSchedules();
+        instance.markThisPartialScheduleAsHopeless(state);
+        State found = instance.findThisPatternOrSubPatternThereof(state);
         if (null == found) {
             fail("BoardState added but not found.");
-        } else if (!found.equals(bs)) {
+        } else if (!found.equals(state)) {
             fail("BoardState added but find() found the wrong one.");
         }
         return instance;

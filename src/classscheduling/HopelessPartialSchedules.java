@@ -16,8 +16,6 @@ public class HopelessPartialSchedules {
 
     private static final int MAX_ENTRIES = 1000;
 
-    private final Schedule schedule;
-
     long numAdded;
     long numPurged;
     long numOverflowed;
@@ -27,30 +25,29 @@ public class HopelessPartialSchedules {
 
     private final Object boardStates[];
 
-    public HopelessPartialSchedules(Schedule schedule) {
-        this.schedule = schedule;
+    public HopelessPartialSchedules() {
         // depth 1..60
         boardStates = new Object[61];
     }
 
-    BoardState addThisPartialSchedule(int depth) {
-        BoardState bs = new BoardState(schedule, depth);
+    void markThisPartialScheduleAsHopeless(State state) {
+        // make a copy of this state, because this state will change!
+        State bs = new State(state);
         purgeSuperPatterns(bs);
         add(bs);
-        return bs;
     }
 
-    BoardState findThisPatternOrSubpatternThereof(BoardState bs) {
-        BoardState result = null;
+    State findThisPatternOrSubPatternThereof(State bs) {
+        State result = null;
         for (int depthIndex = 1; depthIndex <= bs.depth; depthIndex++) {
             if (result != null) {
                 break;
             }
-            ArrayList<BoardState> depthList = (ArrayList<BoardState>) boardStates[depthIndex];
+            ArrayList<State> depthList = (ArrayList<State>) boardStates[depthIndex];
             if ((depthList != null) && (!depthList.isEmpty())) {
                 if (depthIndex < bs.depth) {
                     // check for subpatterns of bs
-                    for (BoardState state : depthList) {
+                    for (State state : depthList) {
                         if (state.isSubPatternOf(bs)) {
                             state.hits++;
                             result = state;
@@ -59,7 +56,7 @@ public class HopelessPartialSchedules {
                     }
                 } else if (depthIndex == bs.depth) {
                     // check if bs already in here
-                    for (BoardState state : depthList) {
+                    for (State state : depthList) {
                         if (state.equals(bs)) {
                             // we already found this state once before
                             state.hits++;
@@ -73,21 +70,31 @@ public class HopelessPartialSchedules {
         return result;
     }
 
-    // Returns false if any one of these is in boardStates:
-    //   this exact board state
-    //   a board state that is a subpattern of this board state
-    boolean vetThisMove(int depth) {
-        BoardState bs = new BoardState(schedule, depth);
-        return (findThisPatternOrSubpatternThereof(bs) == null);
+    void purgeSuperPatterns(State bs) {
+        for (int depthIndex = bs.depth + 1; depthIndex <= 60; depthIndex++) {
+            ArrayList<State> depthList = (ArrayList<State>) boardStates[depthIndex];
+            if ((depthList == null) || (depthList.isEmpty())) {
+                continue;
+            }
+            Iterator<State> iterator = depthList.iterator();
+            while (iterator.hasNext()) {
+                State state = iterator.next();
+                if (bs.isSubPatternOf(state)) {
+                    iterator.remove();
+                    numPurged++;
+                    numElements--;
+                }
+            }
+        }
     }
 
-    private void add(BoardState bs) {
+    void add(State bs) {
         // TODO: does this ever happen? should we shake things up when it does?
         if (numElements >= MAX_ENTRIES) {
             numOverflowed++;
             return;
         }
-        ArrayList<BoardState> depthList = (ArrayList<BoardState>) boardStates[bs.depth];
+        ArrayList<State> depthList = (ArrayList<State>) boardStates[bs.depth];
         if (depthList == null) {
             // TODO optimize initial capacity?
             depthList = new ArrayList<>();
@@ -101,21 +108,4 @@ public class HopelessPartialSchedules {
         }
     }
 
-    private void purgeSuperPatterns(BoardState bs) {
-        for (int depthIndex = bs.depth + 1; depthIndex <= 60; depthIndex++) {
-            ArrayList<BoardState> depthList = (ArrayList<BoardState>) boardStates[depthIndex];
-            if ((depthList == null) || (depthList.isEmpty())) {
-                continue;
-            }
-            Iterator<BoardState> iterator = depthList.iterator();
-            while (iterator.hasNext()) {
-                BoardState state = iterator.next();
-                if (bs.isSubPatternOf(state)) {
-                    iterator.remove();
-                    numPurged++;
-                    numElements--;
-                }
-            }
-        }
-    }
 }

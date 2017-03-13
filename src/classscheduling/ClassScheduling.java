@@ -20,7 +20,7 @@ import static classscheduling.Period.SECOND;
  */
 public class ClassScheduling {
 
-    static Schedule example;
+    static State state;
 
     /**
      * @param args the command line arguments
@@ -28,38 +28,30 @@ public class ClassScheduling {
      */
     public static void main(String[] args) throws Exception {
 
-        example = exampleSchedule();
-
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
                 System.out.println("Shutdown hook called.");
-                example.print();
+                state.print();
             }
         });
 
-        example = exampleSchedule();
-        MovesIterator iterator = new MovesIterator(example, Course.MATH);
-        boolean result = example.scheduleCourses(iterator);
-        if (result) {
+        initState();
+        Solver solver = new Solver(state);
+        if (solver.solve()) {
             System.out.println("Success!");
         } else {
             System.out.println("Failed.");
         }
-        example.validator.validate();
-        // this should not print anything in case of success
-        example.validator.printErrors();
-        example.printStats();
+        solver.printStats();
     }
 
-    private static Schedule exampleSchedule() throws Exception {
-        Schedule schedule = new Schedule();
+    private static void initState() throws Exception {
+        state = new State();
 
-        schedule.set(MONDAY, SEVEN, FIRST, MATH);
-        schedule.set(MONDAY, EIGHT, FOURTH, MATH);
-        schedule.set(MONDAY, NINE, SECOND, MATH);
-
-        return schedule;
+        state.setCourse(SEVEN, MONDAY, FIRST, MATH);
+        state.setCourse(EIGHT, MONDAY, FOURTH, MATH);
+        state.setCourse(NINE, MONDAY, SECOND, MATH);
     }
 
 }

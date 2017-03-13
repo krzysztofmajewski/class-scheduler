@@ -21,6 +21,8 @@ import static classscheduling.Period.SECOND;
 public class ClassScheduling {
 
     static State state;
+    
+    static Solver solver;
 
     /**
      * @param args the command line arguments
@@ -33,11 +35,12 @@ public class ClassScheduling {
             public void run() {
                 System.out.println("Shutdown hook called.");
                 state.print();
+                solver.printStats();
             }
         });
 
         initState();
-        Solver solver = new Solver(state);
+        solver = new Solver(state);
         if (solver.solve()) {
             System.out.println("Success!");
         } else {

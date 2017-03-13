@@ -6,6 +6,8 @@
 package classscheduling;
 
 import static classscheduling.Course.FRENCH;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 /**
  *
@@ -83,7 +85,10 @@ public class Solver {
             MovesIterator subproblemIterator = new MovesIterator(iterator);
             boolean hasSolution = scheduleCourses(subproblemIterator, nextMove);
             if (hasSolution) {
-                return true;
+//                return true;
+                System.out.println("Found a solution!");
+                state.print();
+                printStats();
             }
             // don't pollute hopelessPartialSchedules with illegal moves
 //            if (!nextMove.isIllegalMove) {
@@ -117,14 +122,15 @@ public class Solver {
     void printInfoIfNeeded() throws SanityCheckException {
         if (state.depth < smallestNumberOfSlotsFilledWhenBacktracking) {
             smallestNumberOfSlotsFilledWhenBacktracking = state.depth;
-            System.out.println("This is the most free slots we've seen to date while retreating, printing stats...");
+            System.out.println((60 - state.depth) + " is the most free slots we've seen to date while retreating, printing stats...");
             printStats();
             state.print();
         }
     }
 
     void printStats() {
-        System.out.println(movesSeenInThisGame + " moves seen in this game");
+        NumberFormat formatter = new DecimalFormat("0.######E0");
+        System.out.println(formatter.format(movesSeenInThisGame) + " moves seen in this game");
         System.out.println(movesFailedVetting + " moves failed vetting in this game");
         System.out.println(hopelessPartialSchedules.numAdded
                 + " partial schedules added to lookup table");
@@ -136,6 +142,7 @@ public class Solver {
                 + " partial schedules remaining in lookup table");
         System.out.println(hopelessPartialSchedules.maxElements
                 + " partial schedules in lookup table at its fullest");
+        System.out.println();
     }
 
     // TODO: remove sanity checks

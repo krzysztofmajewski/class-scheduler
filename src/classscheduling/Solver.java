@@ -21,7 +21,7 @@ public class Solver {
     final State state;
 
     int largestNumberOfSlotsFilled = 0;
-    int smallestNumberOfSlotsFilledWhenBacktracking = 0;
+    int smallestNumberOfSlotsFilledWhenBacktracking = 60;
     long movesSeenInThisGame = 0;
     long movesFailedVetting = 0;
 
@@ -93,9 +93,10 @@ public class Solver {
                     state.print();
                 }
             }
-            retreatAndPrintInfoIfNeeded(nextMove);
+            retreat(nextMove);
         }
         // tried all possible moves, did not find solution
+        printInfoIfNeeded();
         return false;
     }
 
@@ -106,11 +107,14 @@ public class Solver {
         return move;
     }
 
-    void retreatAndPrintInfoIfNeeded(Move move) throws SanityCheckException {
+    void retreat(Move move) throws SanityCheckException {
         clear(move);
         if (DEBUG) {
             System.out.println("Retreated from move: " + move.slot + " : " + move.course);
         }
+    }
+
+    void printInfoIfNeeded() throws SanityCheckException {
         if (state.depth < smallestNumberOfSlotsFilledWhenBacktracking) {
             smallestNumberOfSlotsFilledWhenBacktracking = state.depth;
             System.out.println("This is the most free slots we've seen to date while retreating, printing stats...");

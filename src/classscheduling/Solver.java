@@ -55,14 +55,14 @@ public class Solver {
             lastMove.isIllegalMove = true;
             return false;
         }
-        if (!vetThisPartialSchedule()) {
-            movesFailedVetting++;
-            if (DEBUG) {
-                System.out.println("Partial schedule failed vetting:");
-                state.print();
-            }
-            return false;
-        }
+//        if (!vetThisPartialSchedule()) {
+//            movesFailedVetting++;
+//            if (DEBUG) {
+//                System.out.println("Partial schedule failed vetting:");
+//                state.print();
+//            }
+//            return false;
+//        }
         if (state.depth == 60) {
             return validator.validate();
         }
@@ -86,13 +86,13 @@ public class Solver {
                 return true;
             }
             // don't pollute hopelessPartialSchedules with illegal moves
-            if (!nextMove.isIllegalMove) {
-                markThisPartialScheduleAsHopeless();
-                if (DEBUG) {
-                    System.out.println("Marked partial schedule as hopeless:");
-                    state.print();
-                }
-            }
+//            if (!nextMove.isIllegalMove) {
+//                markThisPartialScheduleAsHopeless();
+//                if (DEBUG) {
+//                    System.out.println("Marked partial schedule as hopeless:");
+//                    state.print();
+//                }
+//            }
             retreat(nextMove);
         }
         // tried all possible moves, did not find solution

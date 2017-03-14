@@ -24,20 +24,19 @@ public class Solver {
 
     int largestNumberOfSlotsFilled = 0;
     int smallestNumberOfSlotsFilledWhenBacktracking = 60;
+    int solutionsFound = 0;
+    int duplicateSolutionsFound = 0;
+
     long movesSeenInThisGame = 0;
-    long movesFailedVetting = 0;
 
-    int[] samplesAtDepth;
-
-    HopelessPartialSchedules hopelessPartialSchedules;
+    Solutions solutions;
 
     final ScheduleValidator validator;
 
     public Solver(State state) {
         this.state = state;
         validator = new ScheduleValidator(state);
-        samplesAtDepth = new int[60];
-        hopelessPartialSchedules = new HopelessPartialSchedules();
+        solutions = new Solutions();
     }
 
     boolean solve() throws SanityCheckException {
@@ -57,14 +56,6 @@ public class Solver {
             lastMove.isIllegalMove = true;
             return false;
         }
-//        if (!vetThisPartialSchedule()) {
-//            movesFailedVetting++;
-//            if (DEBUG) {
-//                System.out.println("Partial schedule failed vetting:");
-//                state.print();
-//            }
-//            return false;
-//        }
         if (state.depth == 60) {
             return validator.validate();
         }
@@ -85,19 +76,24 @@ public class Solver {
             MovesIterator subproblemIterator = new MovesIterator(iterator);
             boolean hasSolution = scheduleCourses(subproblemIterator, nextMove);
             if (hasSolution) {
-//                return true;
-                System.out.println("Found a solution!");
-                state.print();
-                printStats();
+                Boolean added = solutions.addIfNotDuplicate(state);
+                if (added == null) {
+                    System.out.println("Solutions table overflowed");
+                    System.out.println("Potentially unique solution:");
+                    state.print();
+                    printStats();
+                } else if (added) {
+                    solutionsFound++;
+                    System.out.println("Found solution # " + solutionsFound + "!");
+                    state.print();
+                    printStats();
+                } else {
+                    System.out.println("Found a duplicate solution");
+                    state.print();
+                    printStats();
+                    duplicateSolutionsFound++;
+                }
             }
-            // don't pollute hopelessPartialSchedules with illegal moves
-//            if (!nextMove.isIllegalMove) {
-//                markThisPartialScheduleAsHopeless();
-//                if (DEBUG) {
-//                    System.out.println("Marked partial schedule as hopeless:");
-//                    state.print();
-//                }
-//            }
             retreat(nextMove);
         }
         // tried all possible moves, did not find solution
@@ -130,18 +126,11 @@ public class Solver {
 
     void printStats() {
         NumberFormat formatter = new DecimalFormat("0.######E0");
-        System.out.println(formatter.format(movesSeenInThisGame) + " moves seen in this game");
-        System.out.println(movesFailedVetting + " moves failed vetting in this game");
-        System.out.println(hopelessPartialSchedules.numAdded
-                + " partial schedules added to lookup table");
-        System.out.println(hopelessPartialSchedules.numPurged
-                + " partial schedules purged from lookup table");
-        System.out.println(hopelessPartialSchedules.numOverflowed
-                + " partial schedules exceeded lookup table capacity");
-        System.out.println(hopelessPartialSchedules.numElements
-                + " partial schedules remaining in lookup table");
-        System.out.println(hopelessPartialSchedules.maxElements
-                + " partial schedules in lookup table at its fullest");
+        System.out.println(formatter.format(movesSeenInThisGame) + " moves tried");
+        System.out.println(solutionsFound + " unique solutions found");
+        System.out.println(duplicateSolutionsFound + " duplicate solutions found");
+        System.out.println(solutions.numOverflowed
+                + " potentially unique solutions exceeded lookup table capacity");
         System.out.println();
     }
 
@@ -152,17 +141,6 @@ public class Solver {
             throw new SanityCheckException(move.slot + ": expected " + move.course + " but found " + c);
         }
         state.clearCourse(move.slot);
-    }
-
-    // Returns false if any one of these is in boardStates:
-    //   this exact board state
-    //   a board state that is a subpattern of this board state
-    boolean vetThisPartialSchedule() {
-        return (hopelessPartialSchedules.findThisPatternOrSubPatternThereof(state) == null);
-    }
-
-    void markThisPartialScheduleAsHopeless() {
-        hopelessPartialSchedules.markThisPartialScheduleAsHopeless(state);
     }
 
     private boolean satisfiesCorrectnessConstraints(Move move) throws SanityCheckException {

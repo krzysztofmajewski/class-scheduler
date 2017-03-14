@@ -5,14 +5,18 @@
  */
 package classscheduling;
 
+import static classscheduling.Course.ENGLISH;
 import static classscheduling.Course.MATH;
 import static classscheduling.Course.MUSIC;
 import static classscheduling.Day.MONDAY;
 import static classscheduling.Day.TUESDAY;
+import static classscheduling.Day.WEDNESDAY;
 import static classscheduling.Grade.EIGHT;
 import static classscheduling.Grade.NINE;
+import static classscheduling.Grade.SEVEN;
 import static classscheduling.Period.FOURTH;
 import static classscheduling.Period.SECOND;
+import static classscheduling.Period.THIRD;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.*;
@@ -53,6 +57,9 @@ public class SolutionsTest {
         System.out.println("add unique state");
         Solutions instance = new Solutions();
         Boolean result = instance.addIfNotDuplicate(state);
+        State uniq = new State(state);
+        uniq.setCourse(SEVEN, WEDNESDAY, THIRD, ENGLISH);
+        result = instance.addIfNotDuplicate(uniq);
         assertEquals(result, true);
     }
 
@@ -62,7 +69,8 @@ public class SolutionsTest {
         Solutions instance = new Solutions();
         Boolean result = instance.addIfNotDuplicate(state);
         assertEquals(result, true);
-        result = instance.addIfNotDuplicate(state);
+        State dupe = new State(state);
+        result = instance.addIfNotDuplicate(dupe);
         assertEquals(result, false);
     }
 

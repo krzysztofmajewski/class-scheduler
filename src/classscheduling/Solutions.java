@@ -14,7 +14,7 @@ import java.util.List;
  */
 public class Solutions {
 
-    static int MAX_ENTRIES = 10000;
+    static int MAX_ENTRIES = 1000 * 1000;
 
     long numAdded;
     long numOverflowed;

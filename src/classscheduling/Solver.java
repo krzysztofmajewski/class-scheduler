@@ -25,18 +25,14 @@ public class Solver {
     int largestNumberOfSlotsFilled = 0;
     int smallestNumberOfSlotsFilledWhenBacktracking = 60;
     int solutionsFound = 0;
-    int duplicateSolutionsFound = 0;
 
     long movesSeenInThisGame = 0;
-
-    Solutions solutions;
 
     final ScheduleValidator validator;
 
     public Solver(State state) {
         this.state = state;
         validator = new ScheduleValidator(state);
-        solutions = new Solutions();
     }
 
     boolean solve() throws SanityCheckException {
@@ -76,23 +72,10 @@ public class Solver {
             MovesIterator subproblemIterator = new MovesIterator(iterator);
             boolean hasSolution = scheduleCourses(subproblemIterator, nextMove);
             if (hasSolution) {
-                Boolean added = solutions.addIfNotDuplicate(state);
-                if (added == null) {
-                    System.out.println("Solutions table overflowed");
-                    System.out.println("Potentially unique solution:");
-                    state.print();
-                    printStats();
-                } else if (added) {
-                    solutionsFound++;
-                    System.out.println("Found solution # " + solutionsFound + "!");
-                    state.print();
-                    printStats();
-                } else {
-                    System.out.println("Found a duplicate solution");
-                    state.print();
-                    printStats();
-                    duplicateSolutionsFound++;
-                }
+                solutionsFound++;
+                System.out.println("Found solution # " + solutionsFound + "!");
+                state.print();
+                printStats();
             }
             retreat(nextMove);
         }
@@ -128,9 +111,6 @@ public class Solver {
         NumberFormat formatter = new DecimalFormat("0.######E0");
         System.out.println(formatter.format(movesSeenInThisGame) + " moves tried");
         System.out.println(solutionsFound + " unique solutions found");
-        System.out.println(duplicateSolutionsFound + " duplicate solutions found");
-        System.out.println(solutions.numOverflowed
-                + " potentially unique solutions exceeded lookup table capacity");
         System.out.println();
     }
 

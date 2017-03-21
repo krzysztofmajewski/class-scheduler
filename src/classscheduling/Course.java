@@ -67,36 +67,24 @@ public enum Course {
         numPeriodsScheduledPerGradePerDay[gradeDayIndex] = numPeriodsScheduledPerGradePerDay[gradeDayIndex] + 1;
     }
 
-    void incrementFrenchPeriodsScheduled(Day day) throws SanityCheckException {
-        if (!this.equals(FRENCH)) {
-            throw new SanityCheckException(this + " is not " + FRENCH);
-        }
+    void incrementFrenchPeriodsScheduled(Day day) {
         final int dayIndex = day.ordinal();
         numPeriodsScheduledPerDay[dayIndex] = numPeriodsScheduledPerDay[dayIndex] + 1;
     }
 
-    void decrementFrenchPeriodsScheduled(Day day) throws SanityCheckException {
-        if (!this.equals(FRENCH)) {
-            throw new SanityCheckException(this + " is not " + FRENCH);
-        }
+    void decrementFrenchPeriodsScheduled(Day day) {
         final int dayIndex = day.ordinal();
         numPeriodsScheduledPerDay[dayIndex] = numPeriodsScheduledPerDay[dayIndex] - 1;
     }
 
-    void incrementFrenchPeriodsScheduled(Grade grade, Day day) throws SanityCheckException {
-        if (!this.equals(FRENCH)) {
-            throw new SanityCheckException(this + " is not " + FRENCH);
-        }
+    void incrementFrenchPeriodsScheduled(Grade grade, Day day) {
         final int gradeIndex = grade.ordinal();
         numPeriodsScheduledPerGrade[gradeIndex] = numPeriodsScheduledPerGrade[gradeIndex] + 1;
         int gradeDayIndex = computeIndex(grade, day);
         numPeriodsScheduledPerGradePerDay[gradeDayIndex] = numPeriodsScheduledPerGradePerDay[gradeDayIndex] + 1;
     }
 
-    void decrementFrenchPeriodsScheduled(Grade grade, Day day) throws SanityCheckException {
-        if (!this.equals(FRENCH)) {
-            throw new SanityCheckException(this + " is not " + FRENCH);
-        }
+    void decrementFrenchPeriodsScheduled(Grade grade, Day day) {
         final int gradeIndex = grade.ordinal();
         numPeriodsScheduledPerGrade[gradeIndex] = numPeriodsScheduledPerGrade[gradeIndex] - 1;
         int gradeDayIndex = computeIndex(grade, day);

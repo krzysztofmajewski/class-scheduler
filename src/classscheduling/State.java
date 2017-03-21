@@ -58,14 +58,7 @@ public class State {
         return getCourse(move.slot.grade, move.slot.day, move.slot.period);
     }
 
-    // TODO: remove sanity check
-    void setCourse(Grade grade, Day day, Period period, Course course) throws SanityCheckException {
-        char c = getCourse(grade, day, period);
-        if (c != 0) {
-            Slot slot = new Slot(grade, day, period);
-            Course oldCourse = Course.forCode(c);
-            throw new SanityCheckException(slot + " already contains course " + oldCourse);
-        }
+    void setCourse(Grade grade, Day day, Period period, Course course) {
         int index = computeIndex(grade, day, period);
         board[index] = course.code;
         depth++;
@@ -76,16 +69,12 @@ public class State {
         }
     }
 
-    void setCourse(Move move) throws SanityCheckException {
+    void setCourse(Move move) {
         setCourse(move.slot.grade, move.slot.day, move.slot.period, move.course);
     }
 
-    void clear(Grade grade, Day day, Period period) throws SanityCheckException {
+    void clear(Grade grade, Day day, Period period) {
         char c = getCourse(grade, day, period);
-        if (c == 0) {
-            Slot slot = new Slot(grade, day, period);
-            throw new SanityCheckException(slot + " already cleared");
-        }
         int index = computeIndex(grade, day, period);
         board[index] = 0;
         depth--;
@@ -97,7 +86,7 @@ public class State {
         }
     }
 
-    void clearCourse(Slot slot) throws SanityCheckException {
+    void clearCourse(Slot slot) {
         clear(slot.grade, slot.day, slot.period);
     }
 
@@ -152,7 +141,7 @@ public class State {
         System.out.println();
     }
 
-    private void incrementFrenchPeriodsScheduled(Grade grade, Day day, Period period) throws SanityCheckException {
+    private void incrementFrenchPeriodsScheduled(Grade grade, Day day, Period period) {
         boolean alreadyScheduledInThisPeriod = false;
         for (Grade g : Grade.values()) {
             char c = getCourse(g, day, period);
@@ -168,7 +157,7 @@ public class State {
         FRENCH.incrementFrenchPeriodsScheduled(grade, day);
     }
     
-    private void decrementFrenchPeriodsScheduled(Grade grade, Day day, Period period) throws SanityCheckException {
+    private void decrementFrenchPeriodsScheduled(Grade grade, Day day, Period period) {
         boolean stillScheduledInThisPeriod = false;
         for (Grade g : Grade.values()) {
             char c = getCourse(g, day, period);

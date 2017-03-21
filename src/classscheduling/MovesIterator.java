@@ -26,7 +26,7 @@ public class MovesIterator {
 
     private Course currentCourse;
 
-    public MovesIterator(State state) throws SanityCheckException {
+    public MovesIterator(State state) {
         this.state = state;
         remainingSlots = new ArrayList<>();
         initRemainingSlots();
@@ -35,7 +35,7 @@ public class MovesIterator {
         this.depth = 60 - remainingSlots.size();
     }
 
-    public MovesIterator(MovesIterator parent) throws SanityCheckException {
+    public MovesIterator(MovesIterator parent) {
         state = parent.state;
         remainingSlots = new ArrayList<>();
         parent.remainingSlots.forEach((slot) -> {
@@ -46,7 +46,7 @@ public class MovesIterator {
         this.depth = parent.depth + 1;
     }
 
-    boolean notDone() throws SanityCheckException {
+    boolean notDone() {
         if (currentCourse.enoughPeriodsPerWeek()) {
             initCurrentCourse();
             initRemainingSlots();
@@ -55,12 +55,9 @@ public class MovesIterator {
         return nextSlotToTry != null && currentCourse != null;
     }
 
-    // TODO: remove sanity check
-    Move getNextMove() throws SanityCheckException {
+    Move getNextMove() {
         Move result = new Move(nextSlotToTry, currentCourse);
-        if (!remainingSlots.remove((Slot) nextSlotToTry)) {
-            throw new SanityCheckException("free slot list does not contain " + (Slot) nextSlotToTry);
-        }
+        remainingSlots.remove((Slot) nextSlotToTry);
         prepareNextMove();
         return result;
     }
@@ -84,7 +81,7 @@ public class MovesIterator {
         }
     }
 
-    private void prepareNextMove() throws SanityCheckException {
+    private void prepareNextMove() {
         if (remainingSlots.isEmpty()) {
             nextSlotToTry = null;
         } else {

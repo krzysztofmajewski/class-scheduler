@@ -39,12 +39,12 @@ public class ScheduleValidator {
         errors.print();
     }
 
-    boolean hasNoErrors() throws SanityCheckException {
+    boolean hasNoErrors() {
         boolean result = !validationFailed;
         return result;
     }
 
-    boolean hasErrors() throws SanityCheckException {
+    boolean hasErrors() {
         boolean result = validationFailed;
         return result;
     }
@@ -59,7 +59,7 @@ public class ScheduleValidator {
     }
 
     // once violated, cannot be un-violated by filling more slots
-    boolean validateCorrectnessConstraints(Move move) throws SanityCheckException {
+    boolean validateCorrectnessConstraints(Move move) {
         boolean result = noCourseTwicePerDay(move)
                 && teacherHasAtMostThreePeriodsPerDay(move)
                 && conflictsWithConference(move)

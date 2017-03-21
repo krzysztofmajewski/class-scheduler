@@ -5,7 +5,6 @@
  */
 package classscheduling;
 
-import static classscheduling.Course.FRENCH;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
@@ -35,7 +34,7 @@ public class Solver {
         validator = new ScheduleValidator(state);
     }
 
-    boolean solve() throws SanityCheckException {
+    boolean solve() {
         validator.reset();
         validator.validateCorrectnessConstraints();
         if (validator.hasErrors()) {
@@ -46,7 +45,7 @@ public class Solver {
     }
 
     // returns true if it finds a solution
-    boolean scheduleCourses(MovesIterator iterator, Move lastMove) throws SanityCheckException {
+    boolean scheduleCourses(MovesIterator iterator, Move lastMove) {
         // lastMove is only null the first time we call this method
         if ((lastMove != null) && !satisfiesCorrectnessConstraints(lastMove)) {
             lastMove.isIllegalMove = true;
@@ -84,21 +83,20 @@ public class Solver {
         return false;
     }
 
-    // TODO: remove sanity check
-    Move move(MovesIterator iterator) throws SanityCheckException {
+    Move move(MovesIterator iterator) {
         Move move = iterator.getNextMove();
         state.setCourse(move);
         return move;
     }
 
-    void retreat(Move move) throws SanityCheckException {
+    void retreat(Move move) {
         clear(move);
         if (DEBUG) {
             System.out.println("Retreated from move: " + move.slot + " : " + move.course);
         }
     }
 
-    void printInfoIfNeeded() throws SanityCheckException {
+    void printInfoIfNeeded() {
         if (state.depth < smallestNumberOfSlotsFilledWhenBacktracking) {
             smallestNumberOfSlotsFilledWhenBacktracking = state.depth;
             System.out.println((60 - state.depth) + " is the most free slots we've seen to date while retreating, printing stats...");
@@ -114,16 +112,12 @@ public class Solver {
         System.out.println();
     }
 
-    // TODO: remove sanity checks
-    void clear(Move move) throws SanityCheckException {
+    void clear(Move move) {
         char c = state.getCourse(move);
-        if (c != move.course.code) {
-            throw new SanityCheckException(move.slot + ": expected " + move.course + " but found " + c);
-        }
         state.clearCourse(move.slot);
     }
 
-    private boolean satisfiesCorrectnessConstraints(Move move) throws SanityCheckException {
+    private boolean satisfiesCorrectnessConstraints(Move move) {
         validator.reset();
         validator.validateCorrectnessConstraints(move);
         return !validator.hasErrors();

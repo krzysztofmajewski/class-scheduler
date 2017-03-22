@@ -62,11 +62,7 @@ public class State {
         int index = computeIndex(grade, day, period);
         board[index] = course.code;
         depth++;
-        if (!course.equals(FRENCH)) {
-            course.incrementPeriodsScheduled(grade, day);
-        } else {
-            incrementFrenchPeriodsScheduled(grade, day, period);
-        }
+        course.incrementPeriodsScheduled(this, grade, day, period);
     }
 
     void setCourse(Move move) {
@@ -135,22 +131,6 @@ public class State {
             System.out.println();
         }
         System.out.println();
-    }
-
-    private void incrementFrenchPeriodsScheduled(Grade grade, Day day, Period period) {
-        boolean alreadyScheduledInThisPeriod = false;
-        for (Grade g : Grade.values()) {
-            char c = getCourse(g, day, period);
-            Course course = Course.forCode(c);
-            if ((course != null) && course.equals(FRENCH)) {
-                alreadyScheduledInThisPeriod = true;
-                break;
-            }
-        }
-        if (!alreadyScheduledInThisPeriod) {
-            FRENCH.incrementFrenchPeriodsScheduled(day);
-        }
-        FRENCH.incrementFrenchPeriodsScheduled(grade, day);
     }
 
 }

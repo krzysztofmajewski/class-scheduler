@@ -14,8 +14,6 @@ import static classscheduling.Course.GEOGRAPHY;
  */
 public class ScheduleValidator {
 
-    static boolean trackErrors;
-
     // in case we decide to shorten the week for testing purposes
     private static final int FIVE = Day.values().length;
 
@@ -51,10 +49,8 @@ public class ScheduleValidator {
 
     boolean validate() {
         reset();
-        trackErrors = true;
         validateCorrectnessConstraints();
         validateCompletenessConstraints();
-        trackErrors = false;
         return !validationFailed;
     }
 
@@ -98,9 +94,6 @@ public class ScheduleValidator {
         boolean result = true;
         for (Grade grade : Grade.values()) {
             if (course.count(grade) < course.periods) {
-//                if (trackErrors) {
-//                    errors.add(g + ": not enough periods of " + course.name);
-//                }
                 validationFailed = true;
                 result = false;
             }
@@ -126,9 +119,6 @@ public class ScheduleValidator {
 
     private boolean notTooManyPeriodsPerWeek(Grade grade, Course course) {
         if (course.count(grade) > course.periods) {
-//            if (trackErrors) {
-//                errors.add(grade + ": too many periods of " + course.name);
-//            }
             validationFailed = true;
             return false;
         }
@@ -155,10 +145,6 @@ public class ScheduleValidator {
 
     private boolean noCourseTwicePerDay(Course course, Day day, Grade grade) {
         if (course.count(grade, day) > 1) {
-//            if (trackErrors) {
-//                errors.add(gd.grade.name() + ": too many " + c.name + " classes"
-//                        + " on " + day.name);
-//            }
             validationFailed = true;
             return false;
         }
@@ -184,20 +170,12 @@ public class ScheduleValidator {
     private boolean teacherHasAtMostThreePeriodsPerDay(Day day, Course course) {
         if (!course.equals(FRENCH) && !course.equals(GEOGRAPHY)) {
             if (course.count(day) > 3) {
-//                if (trackErrors) {
-//                    errors.add(course.name + " teacher has too many periods on "
-//                            + day.name);
-//                }
                 validationFailed = true;
                 return false;
             }
         } else {
             int frenchAndGeoPeriods = FRENCH.count(day) + GEOGRAPHY.count(day);
             if (frenchAndGeoPeriods > 3) {
-//                if (trackErrors) {
-//                    errors.add("French/Geography teacher has too many periods on "
-//                            + day.name);
-//                }
                 validationFailed = true;
                 return false;
             }
@@ -228,10 +206,6 @@ public class ScheduleValidator {
         if ((numGradesWithFrenchAtThisTime % Grade.values().length) == 0) {
             return true;
         }
-//        if (trackErrors) {
-//            errors.add("French class in " + period + " on " + day
-//                    + " must be shared by all grades");
-//        }
         validationFailed = true;
         return false;
     }
@@ -260,10 +234,6 @@ public class ScheduleValidator {
         }
         boolean enoughDaysOff = ((FIVE - daysOn) >= course.daysOff);
         if (!enoughDaysOff) {
-//            if (trackErrors) {
-//                errors.add("Teacher of " + course + " has only "
-//                        + (FIVE - daysOn) + " days off instead of " + course.daysOff);
-//            }
             validationFailed = true;
             return false;
         }
@@ -300,10 +270,6 @@ public class ScheduleValidator {
             }
         }
         if (count > 1) {
-//            if (trackErrors) {
-//                errors.add(course.name + " teacher in two slots at once on "
-//                        + day.name + ", " + p);
-//            }
             validationFailed = true;
             return false;
         }
@@ -350,10 +316,6 @@ public class ScheduleValidator {
         if (otherClasses == 0) {
             return true;
         }
-//        if (trackErrors) {
-//            errors.add("conflict with conference class in " + period
-//                    + " on " + day);
-//        }
         validationFailed = true;
         return false;
     }

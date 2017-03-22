@@ -224,15 +224,8 @@ public class ScheduleValidator {
         return teacherDaysOff(move.course);
     }
 
-    // TODO: optimize by caching this?
     private boolean teacherDaysOff(Course course) {
-        int daysOn = 0;
-        for (Day day : Day.values()) {
-            if (course.count(day) > 0) {
-                daysOn++;
-            }
-        }
-        boolean enoughDaysOff = ((FIVE - daysOn) >= course.daysOff);
+        boolean enoughDaysOff = ((FIVE - course.daysOn) >= course.daysOff);
         if (!enoughDaysOff) {
             validationFailed = true;
             return false;

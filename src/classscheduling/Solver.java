@@ -113,7 +113,6 @@ public class Solver {
     }
 
     void clear(Move move) {
-        char c = state.getCourse(move);
         state.clearCourse(move.slot);
     }
 

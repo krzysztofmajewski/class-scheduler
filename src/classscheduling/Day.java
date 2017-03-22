@@ -5,10 +5,6 @@
  */
 package classscheduling;
 
-import static classscheduling.Grade.EIGHT;
-import static classscheduling.Grade.NINE;
-import static classscheduling.Grade.SEVEN;
-
 /**
  *
  * @author krzys

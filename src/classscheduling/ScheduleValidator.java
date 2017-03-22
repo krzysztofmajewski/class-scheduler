@@ -7,9 +7,6 @@ package classscheduling;
 
 import static classscheduling.Course.FRENCH;
 import static classscheduling.Course.GEOGRAPHY;
-import static classscheduling.Grade.EIGHT;
-import static classscheduling.Grade.NINE;
-import static classscheduling.Grade.SEVEN;
 
 /**
  *
@@ -17,55 +14,40 @@ import static classscheduling.Grade.SEVEN;
  */
 public class ScheduleValidator {
 
-    static boolean trackErrors;
-
     // in case we decide to shorten the week for testing purposes
     private static final int FIVE = Day.values().length;
 
-    private final ValidationErrors errors;
-
     private boolean validationFailed;
 
-    private  final Schedule schedule;
+    private  final State board;
 
-    public ScheduleValidator(Schedule schedule) {
-        this.schedule = schedule;
-        errors = new ValidationErrors();
+    public ScheduleValidator(State board) {
+        this.board = board;
     }
 
     void reset() {
-        errors.clear();
         validationFailed = false;
     }
 
-    void printErrors() {
-        errors.print();
-    }
-
-    boolean hasNoErrors() throws SanityCheckException {
+    boolean hasNoErrors() {
         boolean result = !validationFailed;
         return result;
     }
 
-    boolean hasErrors() throws SanityCheckException {
+    boolean hasErrors() {
         boolean result = validationFailed;
         return result;
     }
 
-    void validate() {
+    boolean validate() {
         reset();
-        trackErrors = true;
         validateCorrectnessConstraints();
         validateCompletenessConstraints();
-        trackErrors = false;
+        return !validationFailed;
     }
 
     // once violated, cannot be un-violated by filling more slots
-    boolean validateCorrectnessConstraints(Move move) throws SanityCheckException {
-        if (move == null) {
-            // this should only happen if we just started
-            return true;
-        }
+    boolean validateCorrectnessConstraints(Move move) {
         boolean result = noCourseTwicePerDay(move)
                 && teacherHasAtMostThreePeriodsPerDay(move)
                 && conflictsWithConference(move)
@@ -75,7 +57,7 @@ public class ScheduleValidator {
         return result;
     }
 
-    private void validateCorrectnessConstraints() {
+    void validateCorrectnessConstraints() {
         noCourseTwicePerDay();
         teacherHasAtMostThreePeriodsPerDay();
         conflictsWithConference();
@@ -104,9 +86,6 @@ public class ScheduleValidator {
         boolean result = true;
         for (Grade grade : Grade.values()) {
             if (course.count(grade) < course.periods) {
-//                if (trackErrors) {
-//                    errors.add(g + ": not enough periods of " + course.name);
-//                }
                 validationFailed = true;
                 result = false;
             }
@@ -132,9 +111,6 @@ public class ScheduleValidator {
 
     private boolean notTooManyPeriodsPerWeek(Grade grade, Course course) {
         if (course.count(grade) > course.periods) {
-//            if (trackErrors) {
-//                errors.add(grade + ": too many periods of " + course.name);
-//            }
             validationFailed = true;
             return false;
         }
@@ -161,10 +137,6 @@ public class ScheduleValidator {
 
     private boolean noCourseTwicePerDay(Course course, Day day, Grade grade) {
         if (course.count(grade, day) > 1) {
-//            if (trackErrors) {
-//                errors.add(gd.grade.name() + ": too many " + c.name + " classes"
-//                        + " on " + day.name);
-//            }
             validationFailed = true;
             return false;
         }
@@ -190,20 +162,12 @@ public class ScheduleValidator {
     private boolean teacherHasAtMostThreePeriodsPerDay(Day day, Course course) {
         if (!course.equals(FRENCH) && !course.equals(GEOGRAPHY)) {
             if (course.count(day) > 3) {
-//                if (trackErrors) {
-//                    errors.add(course.name + " teacher has too many periods on "
-//                            + day.name);
-//                }
                 validationFailed = true;
                 return false;
             }
         } else {
             int frenchAndGeoPeriods = FRENCH.count(day) + GEOGRAPHY.count(day);
             if (frenchAndGeoPeriods > 3) {
-//                if (trackErrors) {
-//                    errors.add("French/Geography teacher has too many periods on "
-//                            + day.name);
-//                }
                 validationFailed = true;
                 return false;
             }
@@ -226,7 +190,7 @@ public class ScheduleValidator {
     private boolean frenchConferenceClassComplete(Day day, Period period) {
         int numGradesWithFrenchAtThisTime = 0;
         for (Grade grade : Grade.values()) {
-            if (schedule.isScheduled(FRENCH, grade, day, period)) {
+            if (board.isScheduled(FRENCH, grade, day, period)) {
                 numGradesWithFrenchAtThisTime++;
             }
         }
@@ -234,10 +198,6 @@ public class ScheduleValidator {
         if ((numGradesWithFrenchAtThisTime % Grade.values().length) == 0) {
             return true;
         }
-//        if (trackErrors) {
-//            errors.add("French class in " + period + " on " + day
-//                    + " must be shared by all grades");
-//        }
         validationFailed = true;
         return false;
     }
@@ -256,20 +216,9 @@ public class ScheduleValidator {
         return teacherDaysOff(move.course);
     }
 
-    // TODO: optimize by caching this?
     private boolean teacherDaysOff(Course course) {
-        int daysOn = 0;
-        for (Day day : Day.values()) {
-            if (course.count(day) > 0) {
-                daysOn++;
-            }
-        }
-        boolean enoughDaysOff = ((FIVE - daysOn) >= course.daysOff);
+        boolean enoughDaysOff = ((FIVE - course.daysOn) >= course.daysOff);
         if (!enoughDaysOff) {
-//            if (trackErrors) {
-//                errors.add("Teacher of " + course + " has only "
-//                        + (FIVE - daysOn) + " days off instead of " + course.daysOff);
-//            }
             validationFailed = true;
             return false;
         }
@@ -301,15 +250,11 @@ public class ScheduleValidator {
         }
         int count = 0;
         for (Grade grade : Grade.values()) {
-            if (schedule.isScheduled(course, grade, day, period)) {
+            if (board.isScheduled(course, grade, day, period)) {
                 count++;
             }
         }
         if (count > 1) {
-//            if (trackErrors) {
-//                errors.add(course.name + " teacher in two slots at once on "
-//                        + day.name + ", " + p);
-//            }
             validationFailed = true;
             return false;
         }
@@ -338,7 +283,8 @@ public class ScheduleValidator {
         int otherClasses = 0;
 
         for (Grade grade : Grade.values()) {
-            Course course = schedule.getCourse(grade, day, period);
+            char c = board.getCourse(grade, day, period);
+            Course course = Course.forCode(c);
             if (course == null) {
                 continue;
             }
@@ -355,10 +301,6 @@ public class ScheduleValidator {
         if (otherClasses == 0) {
             return true;
         }
-//        if (trackErrors) {
-//            errors.add("conflict with conference class in " + period
-//                    + " on " + day);
-//        }
         validationFailed = true;
         return false;
     }

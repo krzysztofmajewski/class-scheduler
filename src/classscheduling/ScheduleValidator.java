@@ -17,24 +17,16 @@ public class ScheduleValidator {
     // in case we decide to shorten the week for testing purposes
     private static final int FIVE = Day.values().length;
 
-    private final ValidationErrors errors;
-
     private boolean validationFailed;
 
     private  final State board;
 
     public ScheduleValidator(State board) {
         this.board = board;
-        errors = new ValidationErrors();
     }
 
     void reset() {
-        errors.clear();
         validationFailed = false;
-    }
-
-    void printErrors() {
-        errors.print();
     }
 
     boolean hasNoErrors() {

@@ -79,11 +79,7 @@ public class State {
         board[index] = 0;
         depth--;
         Course course = Course.forCode(c);
-        if (!course.equals(FRENCH)) {
-            course.decrementPeriodsScheduled(grade, day);
-        } else {
-            decrementFrenchPeriodsScheduled(grade, day, period);
-        }
+        course.decrementPeriodsScheduled(this, grade, day, period);
     }
 
     void clearCourse(Slot slot) {
@@ -155,22 +151,6 @@ public class State {
             FRENCH.incrementFrenchPeriodsScheduled(day);
         }
         FRENCH.incrementFrenchPeriodsScheduled(grade, day);
-    }
-    
-    private void decrementFrenchPeriodsScheduled(Grade grade, Day day, Period period) {
-        boolean stillScheduledInThisPeriod = false;
-        for (Grade g : Grade.values()) {
-            char c = getCourse(g, day, period);
-            Course course = Course.forCode(c);
-            if ((course != null) && course.equals(FRENCH)) {
-                stillScheduledInThisPeriod = true;
-                break;
-            }
-        }
-        if (!stillScheduledInThisPeriod) {
-            FRENCH.decrementFrenchPeriodsScheduled(day);
-        }
-        FRENCH.decrementFrenchPeriodsScheduled(grade, day);
     }
 
 }

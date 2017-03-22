@@ -72,7 +72,7 @@ public enum Course {
         numPeriodsScheduledPerDay[dayIndex] = numPeriodsScheduledPerDay[dayIndex] + 1;
     }
 
-    void decrementFrenchPeriodsScheduled(Day day) {
+    void decrementPeriodsScheduled(Day day) {
         final int dayIndex = day.ordinal();
         numPeriodsScheduledPerDay[dayIndex] = numPeriodsScheduledPerDay[dayIndex] - 1;
     }
@@ -84,20 +84,21 @@ public enum Course {
         numPeriodsScheduledPerGradePerDay[gradeDayIndex] = numPeriodsScheduledPerGradePerDay[gradeDayIndex] + 1;
     }
 
-    void decrementFrenchPeriodsScheduled(Grade grade, Day day) {
-        final int gradeIndex = grade.ordinal();
-        numPeriodsScheduledPerGrade[gradeIndex] = numPeriodsScheduledPerGrade[gradeIndex] - 1;
-        int gradeDayIndex = computeIndex(grade, day);
-        numPeriodsScheduledPerGradePerDay[gradeDayIndex] = numPeriodsScheduledPerGradePerDay[gradeDayIndex] - 1;
-    }
-
     void decrementPeriodsScheduled(Grade grade, Day day) {
         int gradeIndex = grade.ordinal();
         numPeriodsScheduledPerGrade[gradeIndex] = numPeriodsScheduledPerGrade[gradeIndex] - 1;
-        final int dayIndex = day.ordinal();
-        numPeriodsScheduledPerDay[dayIndex] = numPeriodsScheduledPerDay[dayIndex] - 1;
         int gradeDayIndex = computeIndex(grade, day);
         numPeriodsScheduledPerGradePerDay[gradeDayIndex] = numPeriodsScheduledPerGradePerDay[gradeDayIndex] - 1;
+        final int dayIndex = day.ordinal();
+        numPeriodsScheduledPerDay[dayIndex] = numPeriodsScheduledPerDay[dayIndex] - 1;
+    }
+
+    void decrementPeriodsScheduled(State state, Grade grade, Day day, Period period) {
+        if (!this.equals(FRENCH)) {
+            decrementPeriodsScheduled(grade, day);
+        } else {
+            decrementFrenchPeriodsScheduled(state, grade, day, period);
+        }
     }
 
     int count(Grade grade) {
@@ -125,5 +126,24 @@ public enum Course {
     private int computeIndex(Grade grade, Day day) {
         return grade.ordinal() * Day.values().length + day.ordinal();
     }
-    
+
+    private void decrementFrenchPeriodsScheduled(State state, Grade grade, Day day, Period period) {
+        boolean stillScheduledInThisPeriod = false;
+        for (Grade g : Grade.values()) {
+            char c = state.getCourse(g, day, period);
+            Course course = Course.forCode(c);
+            if ((course != null) && course.equals(FRENCH)) {
+                stillScheduledInThisPeriod = true;
+                break;
+            }
+        }
+        if (!stillScheduledInThisPeriod) {
+            decrementPeriodsScheduled(day);
+        }
+        final int gradeIndex = grade.ordinal();
+        numPeriodsScheduledPerGrade[gradeIndex] = numPeriodsScheduledPerGrade[gradeIndex] - 1;
+        int gradeDayIndex = computeIndex(grade, day);
+        numPeriodsScheduledPerGradePerDay[gradeDayIndex] = numPeriodsScheduledPerGradePerDay[gradeDayIndex] - 1;
+    }
+
 }

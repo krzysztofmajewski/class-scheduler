@@ -5,7 +5,6 @@
  */
 package classscheduling;
 
-import static classscheduling.Course.FRENCH;
 import static classscheduling.Util.computeIndex;
 import java.util.Arrays;
 

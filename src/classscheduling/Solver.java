@@ -24,6 +24,7 @@ public class Solver {
     int largestNumberOfSlotsFilled = 0;
     int smallestNumberOfSlotsFilledWhenBacktracking = 60;
     int solutionsFound = 0;
+    int smallestNumberOfSpares = 60;
 
     long movesSeenInThisGame = 0;
 
@@ -73,6 +74,12 @@ public class Solver {
             if (hasSolution) {
                 solutionsFound++;
                 System.out.println("Found solution # " + solutionsFound + "!");
+                int numSpares = Evaluator.evaluate(state);
+                System.out.println("Number of spares: " + numSpares);
+                if (numSpares < smallestNumberOfSpares) {
+                    smallestNumberOfSpares = numSpares;
+                    System.out.println("This is the best solution so far (smallest number of spares)");
+                }
                 state.print();
                 printStats();
             }
@@ -99,7 +106,7 @@ public class Solver {
     void printInfoIfNeeded() {
         if (state.depth < smallestNumberOfSlotsFilledWhenBacktracking) {
             smallestNumberOfSlotsFilledWhenBacktracking = state.depth;
-            System.out.println((60 - state.depth) + " is the most free slots we've seen to date while retreating, printing stats...");
+            System.out.println((60 - state.depth) + " is the most free slots we've seen to date while retreating");
             printStats();
             state.print();
         }
